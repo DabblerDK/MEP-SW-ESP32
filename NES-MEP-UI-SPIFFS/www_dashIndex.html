@@ -1,0 +1,198 @@
+<html>
+  <head>
+    <link rel="stylesheet" type="text/css" href="style.css">
+
+    <!-- https://www.jqueryscript.net/demo/jQuery-jQuery-UI-Plugin-For-Seven-Segment-Indicator-sevenSeg-js/ -->	
+	<script src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.2/jquery.min.js"></script>
+    <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js"></script>
+	<script src="http://ajax.aspnetcdn.com/ajax/knockout/knockout-2.2.1.js"></script>
+    <script src="sevenSeg.js"></script>
+	
+	<!-- //https://developers.google.com/chart/interactive/docs/gallery/gauge -->
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script type="text/javascript">
+      google.charts.load('current', {'packages':['gauge']});
+      google.charts.setOnLoadCallback(drawChart);
+
+      function drawChart() {
+        var data_Fwd_TotalW = google.visualization.arrayToDataTable([
+          ['Label', 'Value'],
+          ['L1L2L3', 0]
+        ]);
+
+        var data_Fwd_W = google.visualization.arrayToDataTable([
+          ['Label', 'Value'],
+          ['L1', 0],
+          ['L2', 0],
+          ['L3', 0]
+        ]);
+
+        var data_Rev_TotalW = google.visualization.arrayToDataTable([
+          ['Label', 'Value'],
+          ['L1L2L3', 0]
+        ]);
+
+        var data_Rev_W = google.visualization.arrayToDataTable([
+          ['Label', 'Value'],
+          ['L1', 0],
+          ['L2', 0],
+          ['L3', 0]
+        ]);
+
+        var data_Freq_mHz = google.visualization.arrayToDataTable([
+          ['Label', 'Value'],
+          ['Hz', 0]
+        ]);
+
+        var data_RMS_A = google.visualization.arrayToDataTable([
+          ['Label', 'Value'],
+          ['L1', 0],
+          ['L2', 0],
+          ['L3', 0]
+        ]);
+
+        var data_RMS_V = google.visualization.arrayToDataTable([
+          ['Label', 'Value'],
+          ['L1', 0],
+          ['L2', 0],
+          ['L3', 0]
+        ]);
+
+        var options_TotalW = {
+          width: 200, height: 180,
+		  max: 24000,
+          yellowFrom: 7500, yellowTo: 15000,
+          redFrom: 15000, redTo: 24000,
+		  majorTicks: ['0','3','6','9','12','15','18','21','24'],
+          minorTicks: 6
+        };
+
+        var options_W = {
+          width: 600, height: 180,
+		  max: 8000,
+          yellowFrom: 2500, yellowTo: 5000,
+          redFrom: 5000, redTo: 8000,
+		  majorTicks: ['0','1','2','3','4','5','6','7','8'],
+          minorTicks: 5
+        };
+
+        var options_Freq_mHz = {
+          width: 200, height: 180,
+		  min: 49700,
+		  max: 50300,
+		  redFrom: 49700, redTo: 49900, redColor: '#FF9900',
+		  greenFrom: 49900, greenTo: 50100,
+          yellowFrom: 50100, yellowTo: 50300,
+		  majorTicks: ['49.7','49.8','49.9','50.0','50.1','50.2','50.3'],
+          minorTicks: 10
+        };
+
+        var options_RMS_A = {
+          width: 600, height: 180,
+		  max: 30000,
+          yellowFrom: 10000, yellowTo: 20000,
+          redFrom: 20000, redTo: 30000,
+		  majorTicks: ['0','3','6','9','12','15','18','21','24','27','30'],
+          minorTicks: 6
+        };
+
+        var options_RMS_V = {
+          width: 600, height: 180,
+		  min: 200000,
+		  max: 260000,
+          redFrom: 200000, redTo: 207000,
+		  greenFrom: 207000, greenTo: 253000,
+          yellowFrom: 253000, yellowTo: 260000, yellowColor: '#DC3912',
+		  majorTicks: ['200','210','220','230','240','250','260'],
+          minorTicks: 10
+        };
+
+        $("#SevenSeg_Fwd_Wh").sevenSeg({digits:11,value:"",colorOff:"#320000",colorOn:"Red"});
+	    $("#SevenSeg_Rev_Wh").sevenSeg({digits:11,value:"",colorOff:"#003200",colorOn:"Lime"});
+
+		var chart_Fwd_TotalW = new google.visualization.Gauge(document.getElementById('gauge_Fwd_TotalW'));
+		var chart_Fwd_W = new google.visualization.Gauge(document.getElementById('gauge_Fwd_W'));
+		var chart_Rev_TotalW = new google.visualization.Gauge(document.getElementById('gauge_Rev_TotalW'));
+		var chart_Rev_W = new google.visualization.Gauge(document.getElementById('gauge_Rev_W'));
+		var chart_Freq_mHz = new google.visualization.Gauge(document.getElementById('gauge_Freq_mHz'));
+        var chart_RMS_A = new google.visualization.Gauge(document.getElementById('gauge_RMS_A'));
+		var chart_RMS_V = new google.visualization.Gauge(document.getElementById('gauge_RMS_V'));
+		chart_Fwd_TotalW.draw(data_Fwd_TotalW, options_TotalW);
+		chart_Fwd_W.draw(data_Fwd_W, options_W);
+		chart_Rev_TotalW.draw(data_Rev_TotalW, options_TotalW);
+		chart_Rev_W.draw(data_Rev_W, options_W);
+		chart_Freq_mHz.draw(data_Freq_mHz, options_Freq_mHz);
+        chart_RMS_A.draw(data_RMS_A, options_RMS_A);
+		chart_RMS_V.draw(data_RMS_V, options_RMS_V);
+
+        setInterval(function() {
+		  const xhttp = new XMLHttpRequest();
+          xhttp.onload = function() {
+		    const Response = JSON.parse(this.responseText);
+
+			document.getElementById("CurrentDateTime").innerHTML = Response.CurrentDateTimeString;
+
+			$("#SevenSeg_Fwd_Wh").sevenSeg({digits:11,value:((Response.Fwd_Act_Wh/1000).toFixed(3)),colorOff:"#320000",colorOn:"Red"});
+	        $("#SevenSeg_Rev_Wh").sevenSeg({digits:11,value:((Response.Rev_Act_Wh/1000).toFixed(3)),colorOff:"#003200",colorOn:"Lime"});
+			
+			data_Fwd_TotalW.setValue(0, 1, Response.Fwd_W);
+			chart_Fwd_TotalW.draw(data_Fwd_TotalW, options_TotalW);
+			data_Fwd_W.setValue(0, 1, Response.L1_Fwd_W);
+			data_Fwd_W.setValue(1, 1, Response.L2_Fwd_W);
+			data_Fwd_W.setValue(2, 1, Response.L3_Fwd_W);
+			chart_Fwd_W.draw(data_Fwd_W, options_W);
+			
+			data_Rev_TotalW.setValue(0, 1, Response.Rev_W);
+			chart_Rev_TotalW.draw(data_Rev_TotalW, options_TotalW);
+			data_Rev_W.setValue(0, 1, Response.L1_Rev_W);
+			data_Rev_W.setValue(1, 1, Response.L2_Rev_W);
+			data_Rev_W.setValue(2, 1, Response.L3_Rev_W);
+			chart_Rev_W.draw(data_Rev_W, options_W);
+
+			data_Freq_mHz.setValue(0, 1, Response.Freq_mHz);
+			chart_Freq_mHz.draw(data_Freq_mHz, options_Freq_mHz);
+
+            data_RMS_A.setValue(0, 1, Response.L1_RMS_A);
+            data_RMS_A.setValue(1, 1, Response.L2_RMS_A);
+            data_RMS_A.setValue(2, 1, Response.L3_RMS_A);
+            chart_RMS_A.draw(data_RMS_A, options_RMS_A);
+
+            data_RMS_V.setValue(0, 1, Response.L1_RMS_V);
+            data_RMS_V.setValue(1, 1, Response.L2_RMS_V);
+            data_RMS_V.setValue(2, 1, Response.L3_RMS_V);
+		    chart_RMS_V.draw(data_RMS_V, options_RMS_V);			
+          }
+          xhttp.open("GET", "/getDashDataWS", true);
+		  xhttp.send();		
+        }, 500);		
+	  }
+    </script>
+  </head>
+  <body>
+    ###FILE:/menu-include.html###
+	<table style="background-color:#FFF; margin-top: 0px;">
+	  <tr>
+	    <td colspan="2" height="80" align="center"><H1><center>Forward Active KWh for L1, L2 and L3<div id="SevenSeg_Fwd_Wh" style="height: 70px; width: fit-content;"></div></td>
+		<td colspan="2" height="80" align="center"><H1><center>Reverse Active KWh for L1, L2 and L3<div id="SevenSeg_Rev_Wh" style="height: 70px; width: fit-content;"></div></td>
+	  </tr>
+	  <tr>
+		<td colspan="2" align="center" style="border-bottom-width: 0px;"><H1><center>Forward Watt</center></H1></td>
+		<td colspan="2" align="center" style="border-bottom-width: 0px;"><H1><center>Reverse Watt</center></H1></td>
+	  </tr>
+	  <tr>
+	    <td height="200" align="center" style="border-top-width: 0px; border-right-width: 0px;"><div id="gauge_Fwd_TotalW" style="width: 200px; height: 180px;"></div></td>
+		<td height="200" align="center" style="border-top-width: 0px; border-left-width: 0px;"><div id="gauge_Fwd_W" style="width: 600px; height: 180px;"></div></td>
+	    <td height="200" align="center" style="border-top-width: 0px; border-right-width: 0px;"><div id="gauge_Rev_TotalW" style="width: 200px; height: 180px;"></div></td>
+		<td height="200" align="center" style="border-top-width: 0px; border-left-width: 0px;"><div id="gauge_Rev_W" style="width: 600px; height: 180px;"></div></td>
+	  </tr>
+	  <tr>
+	    <td colspan="2" height="200" align="center"><H1><center>Forward RMS mili Amp.</center></H1><div id="gauge_RMS_A" style="width: 600px; height: 180px;"></div></td>
+	    <td colspan="2" height="200" align="center"><H1><center>Forward RMS mili Volt</center></H1><div id="gauge_RMS_V" style="width: 600px; height: 180px;"></div></td>
+	  </tr>
+	  <tr>
+	    <td colspan="2" height="200" align="center"><H1><center>Forward mili Hz</center></H1><div id="gauge_Freq_mHz" style="width: 200px; height: 180px;"></div></td>
+	    <td colspan="2" height="200">&nbsp</td>
+	  </tr>
+	</table>
+  </body>
+</html>

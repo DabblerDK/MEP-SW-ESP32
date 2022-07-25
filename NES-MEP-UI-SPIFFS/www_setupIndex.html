@@ -1,0 +1,24 @@
+<html>
+	<head>
+		<link rel="stylesheet" type="text/css" href="style.css">
+	</head>
+	<body>
+		###FILE:/menu-include.html###
+		<form method="GET" name=setupForm action="/SavePreferencesAndRestart">
+			<input name=LoginSession type=hidden value=###LoginSession###>
+			<h1>ESP32-MEP Setup</h1>
+			WIFI SSID and password:<br>
+			<input name=ssid placeholder=SSID value="###wifi_ssid###">
+			<input name=pwd placeholder=Password type=Password value="###wifi_pwd###">
+			<br>
+			User login and password:<br>
+			<input name=userlogin placeholder=Login value="###user_login###">
+			<input name=userpwd placeholder=Password type=Password value="###user_pwd###">
+			<br>
+			MEP key for power meter:<br>
+			<input name=mepkey placeholder="MEP Key as Hex, no spaces" type=Password value="###mep_key###">
+			<br>
+			<input type=submit value="Save and restart">
+		</form>
+	</body>
+</html>
