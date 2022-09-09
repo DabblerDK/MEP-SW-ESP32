@@ -220,6 +220,19 @@ void SerialEvent2() {
 void loop(void) {
   byte j;
 
+  if((!APMode) && (WiFi.status() != WL_CONNECTED)) {
+    Serial.println("Disconnected from WIFI access point");
+    Serial.println("Reconnecting...");
+    if(wifi_password == "") {
+      WiFi.begin(wifi_ssid);
+    }
+    else {
+      WiFi.begin(wifi_ssid,wifi_password);
+    } 
+    delay(30000);
+    Serial.println("");
+  }
+
   //make sure in loop you call handleFTP()!!  
   ftpSrv.handleFTP();        
   
