@@ -205,7 +205,12 @@ void setup(void) {
   InputBufferLength = 0;
 
   // Get started by requesting the UTC Clock
-  queueRequest("300034",mep_key,MEPQueue,&MEPQueueNextIndex,None); // BT52: UTC Clock
+  if(String(mep_key) == "00000000000000000000") {
+    Serial.println("No MEP key set, disabling MEP communication until next reboot...");
+  }
+  else {
+    queueRequest("300034",mep_key,MEPQueue,&MEPQueueNextIndex,None); // BT52: UTC Clock
+  }
 }
 
 void SerialEvent2() {
@@ -368,9 +373,12 @@ void loop(void) {
     else
     {
       if(millis()-LastSentMillis > 2000) {
-        // Update consumption data
-        queueRequest("300017" + MaxMEPReplyLengthAsHex(),mep_key,MEPQueue,&MEPQueueNextIndex,None);
-        queueRequest("30001C" + MaxMEPReplyLengthAsHex(),mep_key,MEPQueue,&MEPQueueNextIndex,None);
+        if(FirstRequestOk)
+        {
+          // Update consumption data
+          queueRequest("300017" + MaxMEPReplyLengthAsHex(),mep_key,MEPQueue,&MEPQueueNextIndex,None);
+          queueRequest("30001C" + MaxMEPReplyLengthAsHex(),mep_key,MEPQueue,&MEPQueueNextIndex,None);
+        }
       }
     }
   }
