@@ -112,6 +112,11 @@ void setup(void) {
   preferences.getString("user_password","").toCharArray(user_password,sizeof(user_password));
   preferences.getString("mep_key","0000000000000000000000000000000000000000").toCharArray(mep_key,sizeof(mep_key));
 
+  if(String(mep_key) == "") 
+  {
+    String("0000000000000000000000000000000000000000").toCharArray(mep_key,sizeof(mep_key));
+  }
+
   if(String(user_password) == "") {
     UserLoginSession = SecretLoginSession; // We are always authenticated if no user-login/password is setup
   }
