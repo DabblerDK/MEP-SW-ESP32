@@ -23,7 +23,7 @@ As we are using the SPIFFS filesystem for web files and your ESP32 most likely d
 6. Remove the jumper between pin 1 and 2, and set the jumper between pin 3 and 4 on J7 for normal operation
 7. Now insert the module in your meter (or power it on with a powersupply or similar)
 8. The ESP32 will try to connect to the configured WiFi access point (AP), but as it is not configured yet, this will fail.
-9. After around a minute, it will go into AP Mode itself with the name "esp32-mep" (subject to change in the future) and the password 123456. Connect a device with a browser to this AP
+9. After around a minute, it will go into AP Mode itself with the name "esp32-mep" (subject to change in the future). Connect a device with a browser to this AP. If you are asked for a password use 123456 or 12345678
 10. Open the page "http://192.168.4.1/recovery". This recovery page supports formatting the SPIFFS file system, uploading of firmware (*.bin) files and web (*.wwws) files, and is independent of the web files on the SPIFFS (so it should always work). As just just programmed the initial firmware, you only have to format the SPIFFS file system and upload the web (*.wwws) file now. You will find the latest update.wwws file in the "NES-MEP-UI-SPIFFS"-folder
 11. After uploading the update.wwws file, please reboot the module
 12. Wait around a minute so the module enters AP Mode again, open the page http://192.168.4.1/. You will see a menu bar at top
