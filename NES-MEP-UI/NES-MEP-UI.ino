@@ -11,7 +11,6 @@
 #include <WebServer.h>
 #include <ESPmDNS.h>
 #include "SPIFFS.h"
-#include <SimpleFTPServer.h>
 #include "NES-MEP.h"
 #include "NES-MEP-RecoveryWebPages.h"
 #include "NES-MEP-WebPages.h"
@@ -19,7 +18,6 @@
 Preferences preferences;
 IPAddress IP;
 WebServer MyWebServer(80);
-FtpServer ftpSrv;
 
 MEPQueueStruct MEPQueue[MaxMEPBuffer];
 byte MEPQueueNextIndex = 0;
@@ -41,42 +39,6 @@ const char* host = "esp32-mep";
 uint32_t previousMillis; 
 byte InputBuffer[MaxMEPReplyLength];
 unsigned long InputBufferLength = 0;
-
-
-void _callback(FtpOperation ftpOperation, unsigned int freeSpace, unsigned int totalSpace){
-  switch (ftpOperation) {
-    case FTP_CONNECT:
-      Serial.println(F("FTP: Connected!"));
-      break;
-    case FTP_DISCONNECT:
-      Serial.println(F("FTP: Disconnected!"));
-      break;
-    case FTP_FREE_SPACE_CHANGE:
-      Serial.printf("FTP: Free space change, free %u of %u!\n", freeSpace, totalSpace);
-      break;
-    default:
-      break;
-  }
-};
-
-void _transferCallback(FtpTransferOperation ftpOperation, const char* name, unsigned int transferredSize){
-  switch (ftpOperation) {
-    case FTP_UPLOAD_START:
-      Serial.println(F("FTP: Upload start!"));
-      break;
-    case FTP_UPLOAD:
-      Serial.printf("FTP: Upload of file %s byte %u\n", name, transferredSize);
-      break;
-    case FTP_TRANSFER_STOP:
-      Serial.println(F("FTP: Finish transfer!"));
-      break;
-    case FTP_TRANSFER_ERROR:
-      Serial.println(F("FTP: Transfer error!"));
-      break;
-    default:
-      break;
-  }
-};
 
 bool PreferencesOk(void) {
   return(preferences.getString(host,"") == host);
@@ -179,29 +141,7 @@ void setup(void) {
   SetupWebPages();
   MyWebServer.begin();
 
-  //FTP
-  if (SPIFFS.begin(true)) { // true=format if we cannot mount
-    ftpSrv.setCallback(_callback);
-    ftpSrv.setTransferCallback(_transferCallback);
-    Serial.println("SPIFFS opened!");
-    if(APMode)
-    {
-      ftpSrv.begin("mep","mep"); //username, password for ftp.   (default port 21, 50009 for PASV)
-    }
-    else
-    {
-      if((user_login == "") || (user_password == "")) 
-      {
-        ftpSrv.begin(wifi_ssid,wifi_password); //username, password for ftp.   (default port 21, 50009 for PASV)
-      }
-      else
-      {
-        ftpSrv.begin(user_login,user_password); //username, password for ftp.   (default port 21, 50009 for PASV)
-      }
-    }
-  }
-  //FTP
-
+  SPIFFS.begin(true); // true=format if we cannot mount
   RS3232Enable(true);
   delay(1000);
   MEPEnable(true);
@@ -242,10 +182,7 @@ void loop(void) {
     delay(30000);
     Serial.println("");
   }
-
-  //make sure in loop you call handleFTP()!!  
-  ftpSrv.handleFTP();        
-  
+   
   // Run web server
   MyWebServer.handleClient();
 
