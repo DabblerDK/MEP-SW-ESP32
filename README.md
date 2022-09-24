@@ -7,11 +7,11 @@ This is the repository holding the Software for OSGP Smart Meters (i.e. Echelon 
 - see https://www.dabbler.dk for further information about this software project
 
 Note:
-- The software has been developed and compiled using Arduino IDE v. 1.8.13, but will probably also work on later versions
+- The software has been developed and compiled using Arduino IDE (we have tested v. 1.8.13 and 2.0.0, but will probably also work on other/later versions
 - We have added this URL as "Additional Board Manager URLs" (the File/Properties menu): https://dl.espressif.com/dl/package_esp32_index.json
 - During development we are using the "DOIT ESP32 DEVKIT V1" board from the "esp32 by Espressif Systems v. 1.0.6" package
 - We are reducing upload speed to 115200 for stability when uploading through the FTDI232/J5 connector
-- We have added these libraries in Arduino IDE: "SimpleFTPServer by Renzo Mischianti v. 2.1.2" (the SimpleFTPServer dependency will go away soon as we are only using it to debug the SPIFFS filesystem)
+- The previous dependency on "SimpleFTPServer by Renzo Mischianti v. 2.1.2" has been removed as we only needed it to debug the SPIFFS wwws upload etc.
 
 Initial startup procedure:
 As we are using the SPIFFS filesystem for web files and your ESP32 most likely does not have our software installed, you need to follow this procedure for the initial startup of the module:
