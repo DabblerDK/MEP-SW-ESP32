@@ -27,8 +27,9 @@ As we are using the SPIFFS filesystem for web files and your ESP32 most likely d
 10. Open the page "http://192.168.4.1/recovery". This recovery page supports formatting the SPIFFS file system, uploading of firmware (*.bin) files and web (*.wwws) files, and is independent of the web files on the SPIFFS (so it should always work). As just just programmed the initial firmware, you only have to format the SPIFFS file system and upload the web (*.wwws) file now. You will find the latest update.wwws file in the "NES-MEP-UI-SPIFFS"-folder
 11. After uploading the update.wwws file, please reboot the module
 12. Wait around a minute so the module enters AP Mode again, open the page http://192.168.4.1/. You will see a menu bar at top
-13. Go to the Configure menu and enter these fields: WiFi SSID and Password, the User login and Password you want on the module and the MBK key you got from your power company. Save and restart the module
+13. Go to the Configure menu. If you are prompted for a login/password, just leave the fields empty as you have not setup any values yet and hit the login button. On the config page you should fill these fields: WiFi SSID and Password, the User login and Password you want on the module and the MBK key you got from your power company. Save and restart the module
 
 Congratulations. Your module is now up and running and should connect to your WiFi.
+The Dashboard page should work without login/password, but for the rest of the pages you need to supply the login/password you chose on the configuration page (the module also accept your wifi name and password as a fail safe).
 
 Note: Next time you want to update the firmware and/or web files it can be done from either the recovery page (http://esp32-mep.local/recovery) or using the "Upload firmware" function in the top menu.
