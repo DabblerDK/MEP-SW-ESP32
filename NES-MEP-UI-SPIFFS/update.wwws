@@ -349,7 +349,7 @@
 			<input name=userpwd placeholder=Password type=Password value="###user_pwd###">
 			<br>
 			MEP key for power meter:<br>
-			<input name=mepkey placeholder="MEP Key as Hex, no spaces" type=Password value="###mep_key###">
+			<input name=mepkey placeholder="MEP Key as ASCII String (20 characters), no spaces" type=Password value="###mep_key###">
 			<br>
 			<input type=submit value="Save and restart">
 		</form>

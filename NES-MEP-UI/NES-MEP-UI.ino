@@ -57,6 +57,8 @@ void setup(void) {
   Serial.begin(115200);
   Serial2.begin(9600);
 
+  randomSeed(analogRead(0)); // Should be before WiFI to prevent "__analogRead(): GPIO0: ESP_ERR_TIMEOUT: ADC2 is in use by Wi-Fi."
+
   // Preferences
   preferences.begin(host, false); 
   if(PreferencesOk()) {
@@ -102,9 +104,7 @@ void setup(void) {
     delay(500);
     Serial.print(".");
     
-    randomSeed(analogRead(0));
-
-    if(millis()-previousMillis > 30000) {
+    if((millis()-previousMillis > 30000) || String(wifi_ssid) == "") {
       Serial.print("Setting up AP (Access Point) ");
       Serial.println(host);
       WiFi.softAP(host, "12345678"); // TO-DO: Brug host + måler SN som SSID og måler SN som password
