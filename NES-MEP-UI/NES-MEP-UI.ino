@@ -15,6 +15,10 @@
 #include "NES-MEP-RecoveryWebPages.h"
 #include "NES-MEP-WebPages.h"
 
+// MQTT TEST IMPLEMENTATION
+#include <PubSubClient.h>     //for mqtt
+// MQTT TEST IMPLEMENTATION END
+
 Preferences preferences;
 IPAddress IP;
 WebServer MyWebServer(80);
@@ -39,6 +43,21 @@ const char* host = "esp32-mep";
 uint32_t previousMillis; 
 byte InputBuffer[MaxMEPReplyLength];
 unsigned long InputBufferLength = 0;
+
+// MQTT TEST IMPLEMENTATION
+WiFiClient espClient;
+PubSubClient client(espClient);
+//Lav webinterface der kan gemme følgende 4 variable ligesom WiFi SSDI/PWD
+const char* MqttServer = "10.0.1.x";
+const char* MqttUser = "xxxx";
+const char* MqttPass = "xxxx";
+const char* deviceId = "ESP32-MEP-Dabbler"; // CAN BE REMOVED
+
+char TopicMqttHomeassistantCreate[100]; //for HomeAssistant autocreate
+char PayloadMqttHomeassistantCreate[300];//for HomeAssistant autocreate
+char TopicData[100];
+char PayloadData[300]; 
+// MQTT TEST IMPLEMENTATION END
 
 bool PreferencesOk(void) {
   return(preferences.getString(host,"") == host);
@@ -155,6 +174,9 @@ void setup(void) {
   }
   else {
     queueRequest("300034",mep_key,MEPQueue,&MEPQueueNextIndex,None); // BT52: UTC Clock
+    // MQTT TEST IMPLEMENTATION 
+    MqttSetup(); //only makes sense to set up MQTT when MEP data is present
+    // MQTT TEST IMPLEMENTATION END
   }
 }
 
@@ -195,7 +217,16 @@ void loop(void) {
     LastSentMillis = millis();
   }
   if(SentAwaitingReply) {
+    // MQTT TEST IMPLEMENTATION
+    if(millis() - LastSentMillis > 5000) { // 5 second should be the meter update frequency
+      MqttReadSendSensorData(); //USE EXISTING FUNCTION AND GET VARIABLES BELOW
+    }
+    // MQTT TEST IMPLEMENTATION END
+
     if(millis() - LastSentMillis > 10000) {
+      // MQTT TEST IMPLEMENTATION
+      client.loop();
+      // MQTT TEST IMPLEMENTATION END
       MEPEnable(false);
       RS3232Enable(false);
       Serial.printf("RS3232 reset 1/2. Dropping buffer with this contents:\r\n");
