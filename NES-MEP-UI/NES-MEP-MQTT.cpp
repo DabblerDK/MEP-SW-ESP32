@@ -1,4 +1,4 @@
-// MQTT TEST IMPLEMENTATION 
+// MQTT TEST IMPLEMENTATION
 void MqttSetup() {
   client.setServer(MqttServer, 1883);
   while (!client.connected()) {
@@ -10,7 +10,7 @@ void MqttSetup() {
       Serial.print("failed, rc="); //debug code can be removed
       Serial.print(client.state());
       Serial.println(" try again in 5 seconds"); //debug code can be removed
-      delay(5000);
+      delay(3000);
     }
   }
 }

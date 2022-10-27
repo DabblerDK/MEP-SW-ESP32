@@ -47,10 +47,9 @@ unsigned long InputBufferLength = 0;
 // MQTT TEST IMPLEMENTATION
 WiFiClient espClient;
 PubSubClient client(espClient);
-//Lav webinterface der kan gemme følgende 4 variable ligesom WiFi SSDI/PWD
-const char* MqttServer = "10.0.1.x";
-const char* MqttUser = "xxxx";
-const char* MqttPass = "xxxx";
+//const char* MqttServer = "10.0.1.x";
+//const char* MqttUser = "xxxx";
+//const char* MqttPass = "xxxx";
 const char* deviceId = "ESP32-MEP-Dabbler"; // CAN BE REMOVED
 
 char TopicMqttHomeassistantCreate[100]; //for HomeAssistant autocreate
@@ -93,6 +92,11 @@ void setup(void) {
   preferences.getString("wifi_password","").toCharArray(wifi_password,sizeof(wifi_password));
   preferences.getString("user_login","mep").toCharArray(user_login,sizeof(user_login));
   preferences.getString("user_password","").toCharArray(user_password,sizeof(user_password));
+  // MQTT TEST IMPLEMENTATION
+  preferences.getString("mqtt_server","").toCharArray(MqttServer,sizeof(mqtt_server));
+  preferences.getString("mqtt_user","").toCharArray(MqttUser,sizeof(mqtt_user));
+  preferences.getString("mqtt_password","").toCharArray(MqttPass,sizeof(mqtt_password));
+  // MQTT TEST IMPLEMENTATION END
   preferences.getString("mep_key","0000000000000000000000000000000000000000").toCharArray(mep_key,sizeof(mep_key));
 
   if(String(mep_key) == "") 

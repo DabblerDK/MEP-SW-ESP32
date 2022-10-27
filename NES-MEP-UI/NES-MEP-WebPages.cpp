@@ -177,6 +177,11 @@ void HandleWebRequest(String URL, String Filename, String ContentType, boolean V
     pageBuffer.replace("###user_login###", user_login);
     pageBuffer.replace("###user_pwd###", user_password);
     pageBuffer.replace("###mep_key###", mep_key);
+    // MQTT TEST IMPLEMENTATION    
+    pageBuffer.replace("###mqtt_server###", mqtt_server);
+    pageBuffer.replace("###mqtt_user_login###", mqtt_user_login);
+    pageBuffer.replace("###mqtt_user_pwd###", mqtt_user_pwd);
+    // MQTT TEST IMPLEMENTATION
     pageBuffer.replace("###MaxMEPReplyLengthAsHex###", MaxMEPReplyLengthAsHex());
     MyWebServer.send(200, ContentType, pageBuffer);
     Serial.printf("File %s sent as response to %s\r\n", Filename.c_str(), URL.c_str());
@@ -226,8 +231,10 @@ boolean HandleLogin(String Login, String Password)
   Serial.printf("Password: '%s'\r\n",Password.c_str());
   return LoggedIn;
 }
-
-void StoreNewConfig(String ssid, String pwd, String userlogin, String userpwd, String mepkey)
+// MQTT TEST IMPLEMENTATION
+//void StoreNewConfig(String ssid, String pwd, String userlogin, String userpwd, String mepkey)
+void StoreNewConfig(String ssid, String pwd, String userlogin, String userpwd, String mepkey, String mqttserver, String mqttuser, String mqttpassword)
+// MQTT TEST IMPLEMENTATION END
 {
   
   Serial.printf("Storing new config in preferences:\r\n");
@@ -240,7 +247,11 @@ void StoreNewConfig(String ssid, String pwd, String userlogin, String userpwd, S
   Serial.printf("User Password: %s\r\n",userpwd.c_str());
   preferences.putString("user_login",userlogin);
   preferences.putString("user_password",userpwd);
-
+// MQTT TEST IMPLEMENTATION
+  preferences.putString("mqtt_server",mqttserver);
+  preferences.putString("mqtt_user",mqttuser);
+  preferences.putString("mqtt_password",mqttpassword);
+// MQTT TEST IMPLEMENTATION END
   Serial.printf("MEP Key: %s\r\n",mepkey.c_str());
   preferences.putString("mep_key",mepkey);
 }
@@ -299,7 +310,18 @@ void SetupWebPages()
   MyWebServer.on("/SavePreferencesAndRestart", HTTP_GET, []() {
     if(CheckLogin())
     {
-      StoreNewConfig(MyWebServer.arg("ssid"),MyWebServer.arg("pwd"),MyWebServer.arg("userlogin"),MyWebServer.arg("userpwd"),MyWebServer.arg("mepkey"));
+      // MQTT TEST IMPLEMENTATION 
+      //StoreNewConfig(MyWebServer.arg("ssid"),MyWebServer.arg("pwd"),MyWebServer.arg("userlogin"),MyWebServer.arg("userpwd"),MyWebServer.arg("mepkey"));
+      StoreNewConfig(MyWebServer.arg("ssid"),
+                      MyWebServer.arg("pwd"),
+                      MyWebServer.arg("userlogin"),
+                      MyWebServer.arg("userpwd"),
+                      MyWebServer.arg("mepkey"),
+                      MyWebServer.arg("mqttserver"),
+                      MyWebServer.arg("mqttuser"),
+                      MyWebServer.arg("mqttpassword")
+                      );
+      // MQTT TEST IMPLEMENTATION END
       RedirectWebRequest("/");
       delay(5000);
       preferences.end();  
