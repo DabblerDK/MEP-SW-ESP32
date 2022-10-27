@@ -7,6 +7,7 @@
 #include "NES-MEP-Tools.h"
 #include "NES-MEP-WebPages.h"
 #include "NES-MEP-RecoveryWebPages.h"
+#include "NES-MEP-MQTT.cpp"
 
 const char compile_date[] = __DATE__ " " __TIME__;
 
@@ -21,6 +22,11 @@ extern char wifi_password[];
 extern char user_login[];
 extern char user_password[];
 extern char mep_key[];
+/*
+extern char mqtt_server[];
+extern char mqtt_user[];
+extern char mqtt_password[];
+*/
 extern byte MEPQueueNextIndex;
 extern ConsumptionDataStruct ConsumptionData;
 extern MeterInfoStruct MeterInfo;
@@ -179,8 +185,8 @@ void HandleWebRequest(String URL, String Filename, String ContentType, boolean V
     pageBuffer.replace("###mep_key###", mep_key);
     // MQTT TEST IMPLEMENTATION    
     pageBuffer.replace("###mqtt_server###", mqtt_server);
-    pageBuffer.replace("###mqtt_user_login###", mqtt_user_login);
-    pageBuffer.replace("###mqtt_user_pwd###", mqtt_user_pwd);
+    pageBuffer.replace("###mqtt_user###", mqtt_user);
+    pageBuffer.replace("###mqtt_password###", mqtt_password);
     // MQTT TEST IMPLEMENTATION
     pageBuffer.replace("###MaxMEPReplyLengthAsHex###", MaxMEPReplyLengthAsHex());
     MyWebServer.send(200, ContentType, pageBuffer);
