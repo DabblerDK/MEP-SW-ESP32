@@ -16,9 +16,13 @@
 			<input name=userpwd placeholder=Password type=Password value="###user_pwd###">
 			<br>
 			MQTT setup: Server, user login and password:<br>
-			<input name=mqttserver placeholder=MQTTServer value="###mqtt_server###">
-			<input name=mqttuser placeholder=Login type=Password value="###mqtt_user_login###">
-			<input name=mqttpassword placeholder=Password value="###mqtt_user_pwd###">
+			<input name=mqttenable value="###mqtt_enable###">
+			<input name=mqttserver placeholder=ServerIP value="###mqtt_server###">
+			<input name=mqttuser placeholder=Username value="###mqtt_user###">
+			<input name=mqttpassword placeholder=Password type=Password value="###mqtt_password###">
+			<br>
+			Home Assistant: Enable Auto Disovery
+			<input name=hassautodiscovery value="###hass_autodiscovery###">
 			<br>
 			MEP key for power meter:<br>
 			<input name=mepkey placeholder="MEP Key as ASCII String (20 characters), no spaces" type=Password value="###mep_key###">

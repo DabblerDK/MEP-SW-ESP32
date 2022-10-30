@@ -46,14 +46,19 @@ char user_password[65] = "";
 char mep_key[21] = "";
 
 const char* deviceId = "ESP32-MEP-Dabbler"; // CAN BE REMOVED
+bool mqtt_enable = false;
+bool hass_autodiscovery = false;
 char mqtt_server[15];
 char mqtt_user[33];
 char mqtt_password[65];
-char TopicMqttHomeassistantCreate[100];
-char PayloadMqttHomeassistantCreate[300];
-char TopicData[100];
-char PayloadData[300]; 
-String MqttSensorArray[25];
+char mqtt_topic_hass_create[100];
+char mqtt_payload_hass_create[300];
+char mqtt_topic_data[100];
+char mqtt_payload_data[300];
+String mqtt_sensor_array[25];
+
+extern MeterInfoStruct MeterInfo;
+extern ConsumptionDataStruct ConsumptionData;
 
 const char* host = "esp32-mep";
 uint32_t previousMillis; 
@@ -95,9 +100,11 @@ void setup(void) {
   preferences.getString("user_login","mep").toCharArray(user_login,sizeof(user_login));
   preferences.getString("user_password","").toCharArray(user_password,sizeof(user_password));
   // MQTT TEST IMPLEMENTATION
+  mqtt_enable = preferences.getBool("mqtt_enable",false);
   preferences.getString("mqtt_server","").toCharArray(mqtt_server,sizeof(mqtt_server));
   preferences.getString("mqtt_user","").toCharArray(mqtt_user,sizeof(mqtt_user));
   preferences.getString("mqtt_password","").toCharArray(mqtt_password,sizeof(mqtt_password));
+  hass_autodiscovery = preferences.getBool("hass_autodiscovery",false);
   // MQTT TEST IMPLEMENTATION END
   preferences.getString("mep_key","0000000000000000000000000000000000000000").toCharArray(mep_key,sizeof(mep_key));
 
@@ -182,11 +189,16 @@ void setup(void) {
     queueRequest("300034",mep_key,MEPQueue,&MEPQueueNextIndex,None); // BT52: UTC Clock
   }
 
-  // MQTT TEST IMPLEMENTATION 
+// MQTT TEST IMPLEMENTATION 
   //READ TOGGLE ENABLE HASS AUTODISCOVERY FROM WEBINTERFACE BEFORE EXECUTING FUNCTION
-  MqttSetup(); //only makes sense to set up MQTT when MEP data is present
-  MqttSensorHomeAssistantAutoDisoverySetup();
-  //MQTT TEST IMPLEMENTATION END
+  if(mqtt_enable) {
+    MqttSetup(); //only makes sense to set up MQTT when MEP data is present
+    if(hass_autodiscovery) {
+      MqttSensorHomeAssistantAutoDisoverySetup();
+    }
+  }
+//MQTT TEST IMPLEMENTATION END
+  
   
 }
 
@@ -414,7 +426,7 @@ void MqttSensorHomeAssistantAutoDisoverySetup() {
 
   //maybe implement check for already existing sensors in HASS to ensure sensors are not wrongly duplicated?
   int i = 0;
-    sprintf(PayloadMqttHomeassistantCreate, "{\
+    sprintf(mqtt_payload_hass_create, "{\
           \"uniq_id\":\"%s_time\",\
           \"name\":\"%s time\",\
           \"icon\":\"mdi:clock-outline\",\
@@ -428,9 +440,9 @@ void MqttSensorHomeAssistantAutoDisoverySetup() {
             \"sw_version\":\"%s\"\
             }\
           }", deviceId, deviceId, deviceId, ESP_SW_By, ESP_SW, deviceId, ESP_SW_Version);
-    MqttSensorArray[i] = PayloadMqttHomeassistantCreate;
+    mqtt_sensor_array[i] = mqtt_payload_hass_create;
     i++;
-    sprintf(PayloadMqttHomeassistantCreate, "{\
+    sprintf(mqtt_payload_hass_create, "{\
           \"uniq_id\":\"%s_energy_actual_forward\",\
           \"name\":\"%s energy forward\",\
           \"icon\":\"mdi:sine-wave\",\
@@ -445,9 +457,9 @@ void MqttSensorHomeAssistantAutoDisoverySetup() {
             \"sw_version\":\"%s\"\
             }\
           }", deviceId, deviceId, deviceId, ESP_SW_By, ESP_SW, deviceId, ESP_SW_Version);
-    MqttSensorArray[i] = PayloadMqttHomeassistantCreate;
+    mqtt_sensor_array[i] = mqtt_payload_hass_create;
     i++;
-    sprintf(PayloadMqttHomeassistantCreate, "{\
+    sprintf(mqtt_payload_hass_create, "{\
           \"uniq_id\":\"%s_energy_actual_reverse\",\
           \"name\":\"%s energy reverse\",\
           \"icon\":\"mdi:sine-wave\",\
@@ -462,9 +474,9 @@ void MqttSensorHomeAssistantAutoDisoverySetup() {
             \"sw_version\":\"%s\"\
             }\
           }", deviceId, deviceId, deviceId, ESP_SW_By, ESP_SW, deviceId, ESP_SW_Version);
-    MqttSensorArray[i] = PayloadMqttHomeassistantCreate;
+    mqtt_sensor_array[i] = mqtt_payload_hass_create;
     i++;
-    sprintf(PayloadMqttHomeassistantCreate, "{\
+    sprintf(mqtt_payload_hass_create, "{\
           \"uniq_id\":\"%s_P_forward\",\
           \"name\":\"%s P forward\",\
           \"icon\":\"mdi:sine-wave\",\
@@ -479,9 +491,9 @@ void MqttSensorHomeAssistantAutoDisoverySetup() {
             \"sw_version\":\"%s\"\
             }\
           }", deviceId, deviceId, deviceId, ESP_SW_By, ESP_SW, deviceId, ESP_SW_Version);
-    MqttSensorArray[i] = PayloadMqttHomeassistantCreate;
+    mqtt_sensor_array[i] = mqtt_payload_hass_create;
     i++;
-    sprintf(PayloadMqttHomeassistantCreate, "{\
+    sprintf(mqtt_payload_hass_create, "{\
           \"uniq_id\":\"%s_P_reverse\",\
           \"name\":\"%s P reverse\",\
           \"icon\":\"mdi:sine-wave\",\
@@ -496,9 +508,9 @@ void MqttSensorHomeAssistantAutoDisoverySetup() {
             \"sw_version\":\"%s\"\
             }\
           }", deviceId, deviceId, deviceId, ESP_SW_By, ESP_SW, deviceId, ESP_SW_Version);
-    MqttSensorArray[i] = PayloadMqttHomeassistantCreate;
+    mqtt_sensor_array[i] = mqtt_payload_hass_create;
     i++;
-    sprintf(PayloadMqttHomeassistantCreate, "{\
+    sprintf(mqtt_payload_hass_create, "{\
           \"uniq_id\":\"%s_A_L1\",\
           \"name\":\"%s A L1\",\
           \"icon\":\"mdi:sine-wave\",\
@@ -513,9 +525,9 @@ void MqttSensorHomeAssistantAutoDisoverySetup() {
             \"sw_version\":\"%s\"\
             }\
           }", deviceId, deviceId, deviceId, ESP_SW_By, ESP_SW, deviceId, ESP_SW_Version);
-    MqttSensorArray[i] = PayloadMqttHomeassistantCreate;
+    mqtt_sensor_array[i] = mqtt_payload_hass_create;
     i++;
-    sprintf(PayloadMqttHomeassistantCreate, "{\
+    sprintf(mqtt_payload_hass_create, "{\
           \"uniq_id\":\"%s_A_L2\",\
           \"name\":\"%s A L2\",\
           \"icon\":\"mdi:sine-wave\",\
@@ -530,9 +542,9 @@ void MqttSensorHomeAssistantAutoDisoverySetup() {
             \"sw_version\":\"%s\"\
             }\
           }", deviceId, deviceId, deviceId, ESP_SW_By, ESP_SW, deviceId, ESP_SW_Version);
-    MqttSensorArray[i] = PayloadMqttHomeassistantCreate;
+    mqtt_sensor_array[i] = mqtt_payload_hass_create;
     i++;
-    sprintf(PayloadMqttHomeassistantCreate, "{\
+    sprintf(mqtt_payload_hass_create, "{\
           \"uniq_id\":\"%s_A_L3\",\
           \"name\":\"%s A L3\",\
           \"icon\":\"mdi:sine-wave\",\
@@ -547,9 +559,9 @@ void MqttSensorHomeAssistantAutoDisoverySetup() {
             \"sw_version\":\"%s\"\
             }\
           }", deviceId, deviceId, deviceId, ESP_SW_By, ESP_SW, deviceId, ESP_SW_Version);
-    MqttSensorArray[i] = PayloadMqttHomeassistantCreate;
+    mqtt_sensor_array[i] = mqtt_payload_hass_create;
     i++;
-    sprintf(PayloadMqttHomeassistantCreate, "{\
+    sprintf(mqtt_payload_hass_create, "{\
           \"uniq_id\":\"%s_V_L1\",\
           \"name\":\"%s V L1\",\
           \"icon\":\"mdi:sine-wave\",\
@@ -564,9 +576,9 @@ void MqttSensorHomeAssistantAutoDisoverySetup() {
             \"sw_version\":\"%s\"\
             }\
           }", deviceId, deviceId, deviceId, ESP_SW_By, ESP_SW, deviceId, ESP_SW_Version);
-    MqttSensorArray[i] = PayloadMqttHomeassistantCreate;
+    mqtt_sensor_array[i] = mqtt_payload_hass_create;
     i++;
-    sprintf(PayloadMqttHomeassistantCreate, "{\
+    sprintf(mqtt_payload_hass_create, "{\
           \"uniq_id\":\"%s_V_L2\",\
           \"name\":\"%s V L2\",\
           \"icon\":\"mdi:sine-wave\",\
@@ -581,9 +593,9 @@ void MqttSensorHomeAssistantAutoDisoverySetup() {
             \"sw_version\":\"%s\"\
             }\
           }", deviceId, deviceId, deviceId, ESP_SW_By, ESP_SW, deviceId, ESP_SW_Version);
-    MqttSensorArray[i] = PayloadMqttHomeassistantCreate;
+    mqtt_sensor_array[i] = mqtt_payload_hass_create;
     i++;
-    sprintf(PayloadMqttHomeassistantCreate, "{\
+    sprintf(mqtt_payload_hass_create, "{\
           \"uniq_id\":\"%s_V_L3\",\
           \"name\":\"%s V L3\",\
           \"icon\":\"mdi:sine-wave\",\
@@ -598,9 +610,9 @@ void MqttSensorHomeAssistantAutoDisoverySetup() {
             \"sw_version\":\"%s\"\
             }\
           }", deviceId, deviceId, deviceId, ESP_SW_By, ESP_SW, deviceId, ESP_SW_Version);
-    MqttSensorArray[i] = PayloadMqttHomeassistantCreate;
+    mqtt_sensor_array[i] = mqtt_payload_hass_create;
     i++;
-    sprintf(PayloadMqttHomeassistantCreate, "{\
+    sprintf(mqtt_payload_hass_create, "{\
           \"uniq_id\":\"%s_W_Forward_L1\",\
           \"name\":\"%s W Forward L1\",\
           \"icon\":\"mdi:sine-wave\",\
@@ -615,9 +627,9 @@ void MqttSensorHomeAssistantAutoDisoverySetup() {
             \"sw_version\":\"%s\"\
             }\
           }", deviceId, deviceId, deviceId, ESP_SW_By, ESP_SW, deviceId, ESP_SW_Version);
-    MqttSensorArray[i] = PayloadMqttHomeassistantCreate;
+    mqtt_sensor_array[i] = mqtt_payload_hass_create;
     i++;
-    sprintf(PayloadMqttHomeassistantCreate, "{\
+    sprintf(mqtt_payload_hass_create, "{\
           \"uniq_id\":\"%s_W_Forward_L2\",\
           \"name\":\"%s W Forward L2\",\
           \"icon\":\"mdi:sine-wave\",\
@@ -632,9 +644,9 @@ void MqttSensorHomeAssistantAutoDisoverySetup() {
             \"sw_version\":\"%s\"\
             }\
           }", deviceId, deviceId, deviceId, ESP_SW_By, ESP_SW, deviceId, ESP_SW_Version);
-    MqttSensorArray[i] = PayloadMqttHomeassistantCreate;
+    mqtt_sensor_array[i] = mqtt_payload_hass_create;
     i++;
-    sprintf(PayloadMqttHomeassistantCreate, "{\
+    sprintf(mqtt_payload_hass_create, "{\
           \"uniq_id\":\"%s_W_Forward_L3\",\
           \"name\":\"%s W Forward L3\",\
           \"icon\":\"mdi:sine-wave\",\
@@ -649,9 +661,9 @@ void MqttSensorHomeAssistantAutoDisoverySetup() {
             \"sw_version\":\"%s\"\
             }\
           }", deviceId, deviceId, deviceId, ESP_SW_By, ESP_SW, deviceId, ESP_SW_Version);
-    MqttSensorArray[i] = PayloadMqttHomeassistantCreate;
+    mqtt_sensor_array[i] = mqtt_payload_hass_create;
     i++;
-    sprintf(PayloadMqttHomeassistantCreate, "{\
+    sprintf(mqtt_payload_hass_create, "{\
           \"uniq_id\":\"%s_W_Reverse_L1\",\
           \"name\":\"%s W Reverse L1\",\
           \"icon\":\"mdi:sine-wave\",\
@@ -666,9 +678,9 @@ void MqttSensorHomeAssistantAutoDisoverySetup() {
             \"sw_version\":\"%s\"\
             }\
           }", deviceId, deviceId, deviceId, ESP_SW_By, ESP_SW, deviceId, ESP_SW_Version);
-    MqttSensorArray[i] = PayloadMqttHomeassistantCreate;
+    mqtt_sensor_array[i] = mqtt_payload_hass_create;
     i++;
-    sprintf(PayloadMqttHomeassistantCreate, "{\
+    sprintf(mqtt_payload_hass_create, "{\
           \"uniq_id\":\"%s_W_Reverse_L2\",\
           \"name\":\"%s W Reverse L2\",\
           \"icon\":\"mdi:sine-wave\",\
@@ -683,9 +695,9 @@ void MqttSensorHomeAssistantAutoDisoverySetup() {
             \"sw_version\":\"%s\"\
             }\
           }", deviceId, deviceId, deviceId, ESP_SW_By, ESP_SW, deviceId, ESP_SW_Version);
-    MqttSensorArray[i] = PayloadMqttHomeassistantCreate;
+    mqtt_sensor_array[i] = mqtt_payload_hass_create;
     i++;
-    sprintf(PayloadMqttHomeassistantCreate, "{\
+    sprintf(mqtt_payload_hass_create, "{\
           \"uniq_id\":\"%s_W_Reverse_L3\",\
           \"name\":\"%s W Reverse L3\",\
           \"icon\":\"mdi:sine-wave\",\
@@ -700,7 +712,7 @@ void MqttSensorHomeAssistantAutoDisoverySetup() {
             \"sw_version\":\"%s\"\
             }\
           }", deviceId, deviceId, deviceId, ESP_SW_By, ESP_SW, deviceId, ESP_SW_Version);
-    MqttSensorArray[i] = PayloadMqttHomeassistantCreate;
+    mqtt_sensor_array[i] = mqtt_payload_hass_create;
 /*
 add "hw" to string - and use abbreviations from https://www.home-assistant.io/docs/mqtt/discovery/
 // exp_aft: expire_after fx 300 sekunder
@@ -709,8 +721,8 @@ add "hw" to string - and use abbreviations from https://www.home-assistant.io/do
 
 
   for (int e = 0; e < i ; e++) { // Loop through above sensors and send via MQTT broker to autodiscover in HomeAssistant
-    sprintf(TopicMqttHomeassistantCreate, "homeassistant/sensor/dabbler_sensor_%s_%i/config", deviceId, e);
-    mqttclient.publish(TopicMqttHomeassistantCreate, MqttSensorArray[e].c_str(), true); //hver sensor oprettes med et retain flag, så HASS altid ser sensorerne ved genstart af HASS.sensor_array[e][1].c_str()
+    sprintf(mqtt_topic_hass_create, "homeassistant/sensor/dabbler_sensor_%s_%i/config", deviceId, e);
+    mqttclient.publish(mqtt_topic_hass_create, mqtt_sensor_array[e].c_str(), true); //hver sensor oprettes med et retain flag, så HASS altid ser sensorerne ved genstart af HASS.sensor_array[e][1].c_str()
   }
 }
 
@@ -761,8 +773,8 @@ void MqttReadSendSensorData() { //ESP_SW_Version
       dtostrf(originalVariabel3, 4, 1, L3_RMS_V);
     */
 
-  sprintf(TopicData, "ESP32MEP/%s/sensors", deviceId); //CREATE TOPIC FOR CURRENT DEVICENAME (Can use another variable than deviceId, thats already in use in program)
-  sprintf(PayloadData, "{\
+  sprintf(mqtt_topic_data, "ESP32MEP/%s/sensors", deviceId); //CREATE TOPIC FOR CURRENT DEVICENAME (Can use another variable than deviceId, thats already in use in program)
+  sprintf(mqtt_payload_data, "{\
     \"Fwd_Act_Wh\":%lu,\"Rev_Act_Wh\":%lu,\"Freq_mHz\":%lu,\
     \"Fwd_W\":%lu,\"Rev_W\":%lu,\
     \"L1_RMS_A\":%lu,\"L2_RMS_A\":%lu,\"L3_RMS_A\":%lu,\
@@ -785,5 +797,5 @@ void MqttReadSendSensorData() { //ESP_SW_Version
     L1_Rev_Avg_W, L2_Rev_Avg_W, L3_Rev_Avg_W 
   */
     ); 
-  mqttclient.publish(TopicData, PayloadData);
+  mqttclient.publish(mqtt_topic_data, mqtt_payload_data);
 }
