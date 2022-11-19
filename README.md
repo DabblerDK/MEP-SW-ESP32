@@ -18,7 +18,7 @@ Note:
 
 Initial startup procedure - when our software is NOT installed:
 As we are using the SPIFFS filesystem for web files and your ESP32 most likely does not have our software installed, you need to follow this procedure for the initial startup of the module:
-1. Warning: Make sure to adjust the DC-DC buck converter to 3.6v before sending any power to the ESP32 module. See the hardware notes.
+1. Warning: Make sure to adjust the DC-DC buck converter to 3.4-3.5v before sending any power to the ESP32 module. See the hardware notes.
 2. Warning: Make sure your FTDI232 is only providng 3.3v when jumped to 3.3v. Some of them sends 5v power and that will fry your ESP32.
 3. Install a jumper between pin 1 and 2, and remove the jumper between pin 3 and 4 on J7. This will make sure the ESP32 is in programming mode and gets power from the FTDI232 module
 4. Insert a FTDI232 module in the J5 holes. If you angle it, the pin headers of the FTDI232 will make a fair connection to the PCB holes. Make sure to orient the FTDI232 module correctly: on MEP module version 1.10 and above, the square pad is GND.
