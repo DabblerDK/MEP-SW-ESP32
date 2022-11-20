@@ -7,6 +7,7 @@
 #include "NES-MEP-Tools.h"
 #include "NES-MEP-WebPages.h"
 #include "NES-MEP-RecoveryWebPages.h"
+//#include "NES-MEP-MQTT.cpp"
 
 const char compile_date[] = __DATE__ " " __TIME__;
 
@@ -21,6 +22,13 @@ extern char wifi_password[];
 extern char user_login[];
 extern char user_password[];
 extern char mep_key[];
+
+extern boolean mqtt_enable;
+extern boolean hass_autodiscovery;
+extern char mqtt_server[];
+extern char mqtt_user[];
+extern char mqtt_password[];
+
 extern byte MEPQueueNextIndex;
 extern ConsumptionDataStruct ConsumptionData;
 extern MeterInfoStruct MeterInfo;
@@ -177,6 +185,13 @@ void HandleWebRequest(String URL, String Filename, String ContentType, boolean V
     pageBuffer.replace("###user_login###", user_login);
     pageBuffer.replace("###user_pwd###", user_password);
     pageBuffer.replace("###mep_key###", mep_key);
+    // MQTT TEST IMPLEMENTATION    
+    pageBuffer.replace("###mqtt_enable###", String(mqtt_enable));
+    pageBuffer.replace("###mqtt_server###", mqtt_server);
+    pageBuffer.replace("###mqtt_user###", mqtt_user);
+    pageBuffer.replace("###mqtt_password###", mqtt_password);
+    pageBuffer.replace("###hass_autodiscovery###", String(hass_autodiscovery));
+    // MQTT TEST IMPLEMENTATION
     pageBuffer.replace("###MaxMEPReplyLengthAsHex###", MaxMEPReplyLengthAsHex());
     MyWebServer.send(200, ContentType, pageBuffer);
     Serial.printf("File %s sent as response to %s\r\n", Filename.c_str(), URL.c_str());
@@ -226,8 +241,10 @@ boolean HandleLogin(String Login, String Password)
   Serial.printf("Password: '%s'\r\n",Password.c_str());
   return LoggedIn;
 }
-
-void StoreNewConfig(String ssid, String pwd, String userlogin, String userpwd, String mepkey)
+// MQTT TEST IMPLEMENTATION
+//void StoreNewConfig(String ssid, String pwd, String userlogin, String userpwd, String mepkey)
+void StoreNewConfig(String ssid, String pwd, String userlogin, String userpwd, String mepkey, boolean mqttenable, String mqttserver, String mqttuser, String mqttpassword, boolean hassautodiscovery)
+// MQTT TEST IMPLEMENTATION END
 {
   
   Serial.printf("Storing new config in preferences:\r\n");
@@ -240,7 +257,16 @@ void StoreNewConfig(String ssid, String pwd, String userlogin, String userpwd, S
   Serial.printf("User Password: %s\r\n",userpwd.c_str());
   preferences.putString("user_login",userlogin);
   preferences.putString("user_password",userpwd);
-
+// MQTT TEST IMPLEMENTATION
+  Serial.printf("Mqtt server: %s\r\n",mqttserver.c_str());
+  Serial.printf("Mqtt user: %s\r\n",mqttuser.c_str());
+  Serial.printf("Mqtt password: %s\r\n",mqttpassword.c_str());
+  preferences.putBool("mqtt_enable",mqttenable);
+  preferences.putString("mqtt_server",mqttserver);
+  preferences.putString("mqtt_user",mqttuser);
+  preferences.putString("mqtt_password",mqttpassword);
+  preferences.putBool("hass_autodiscovery",hassautodiscovery);
+// MQTT TEST IMPLEMENTATION END
   Serial.printf("MEP Key: %s\r\n",mepkey.c_str());
   preferences.putString("mep_key",mepkey);
 }
@@ -299,7 +325,20 @@ void SetupWebPages()
   MyWebServer.on("/SavePreferencesAndRestart", HTTP_GET, []() {
     if(CheckLogin())
     {
-      StoreNewConfig(MyWebServer.arg("ssid"),MyWebServer.arg("pwd"),MyWebServer.arg("userlogin"),MyWebServer.arg("userpwd"),MyWebServer.arg("mepkey"));
+      // MQTT TEST IMPLEMENTATION 
+      //StoreNewConfig(MyWebServer.arg("ssid"),MyWebServer.arg("pwd"),MyWebServer.arg("userlogin"),MyWebServer.arg("userpwd"),MyWebServer.arg("mepkey"));
+      StoreNewConfig(MyWebServer.arg("ssid"),
+                      MyWebServer.arg("pwd"),
+                      MyWebServer.arg("userlogin"),
+                      MyWebServer.arg("userpwd"),
+                      MyWebServer.arg("mepkey"),
+                      MyWebServer.arg("mqttenable"),
+                      MyWebServer.arg("mqttserver"),
+                      MyWebServer.arg("mqttuser"),
+                      MyWebServer.arg("mqttpassword"),
+                      MyWebServer.arg("hassautodisovery")
+                      );
+      // MQTT TEST IMPLEMENTATION END
       RedirectWebRequest("/");
       delay(5000);
       preferences.end();  
