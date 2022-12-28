@@ -400,8 +400,8 @@ void MqttSetup() {
     } else {
       Serial.print("failed, rc="); //debug code can be removed
       Serial.print(mqttclient.state());
-      Serial.println(" try again in 5 seconds"); //debug code can be removed
-      delay(3000);
+      Serial.println(" discarding setup, try again"); //debug code can be removed
+      break;
     }
   }
 }
@@ -415,7 +415,7 @@ void MqttReconnect() {
       Serial.print("failed, rc=");
       Serial.print(mqttclient.state());
       Serial.println(" trying again in next loop");
-      return;
+      break;
     }
   }
 }
