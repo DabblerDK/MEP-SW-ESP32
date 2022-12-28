@@ -64,6 +64,11 @@ typedef struct {
   long BT28_Rev_Avg_W_L1 = 0;
   long BT28_Rev_Avg_W_L2 = 0;
   long BT28_Rev_Avg_W_L3 = 0;
+  long BT28_PowerFactor_Fac_L1 = 0;
+  long BT28_PowerFactor_Fac_L2 = 0;
+  long BT28_PowerFactor_Fac_L3 = 0;
+  long BT28_ExportReactive_VAr = 0;
+  long BT28_ImportReactive_VAr = 0;
 } ConsumptionDataStruct;
 
 typedef struct {

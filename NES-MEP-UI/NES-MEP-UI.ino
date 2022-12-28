@@ -226,7 +226,23 @@ void loop(void) {
     delay(30000);
     Serial.println("");
   }
-   
+
+  if(mqtt_enable) {
+    static unsigned long LastMQTTSentMillis = 0;
+
+    mqttclient.loop();
+    if(millis() - LastMQTTSentMillis > 10000) {
+      if (!mqttclient.connected()) {
+        MqttReconnect();
+        delay(2000);
+      } else {
+        MqttReadSendSensorData();
+        LastMQTTSentMillis=millis();
+      }
+    }
+    // MQTT TEST IMPLEMENTATION END
+  }
+
   // Run web server
   MyWebServer.handleClient();
 
@@ -239,15 +255,7 @@ void loop(void) {
     LastSentMillis = millis();
   }
   if(SentAwaitingReply) {
-    // MQTT TEST IMPLEMENTATION
-    if(millis() - LastSentMillis > 5000) {
-      if (!mqttclient.connected()) {
-        MqttReconnect();
-      } else {
-        MqttReadSendSensorData();
-      }
-    }
-    // MQTT TEST IMPLEMENTATION END
+
 
     if(millis() - LastSentMillis > 10000) {
       // MQTT TEST IMPLEMENTATION
@@ -430,7 +438,7 @@ void MqttSensorHomeAssistantAutoDisoverySetup() {
           \"uniq_id\":\"%s_time\",\
           \"name\":\"%s time\",\
           \"icon\":\"mdi:clock-outline\",\
-          \"stat_t\":\"ESP32MEP/%s/sensors\",\
+          \"stat_t\":\"%s/sensors\",\
           \"val_tpl\":\"{{ value_json.CurrentDateTimeString}}\",\
           \"dev_cla\":\"timestamp\",\
           \"device\":{\"identifiers\":\"ESP32 MEP Interface @ Dabbler.dk\",\
@@ -446,7 +454,7 @@ void MqttSensorHomeAssistantAutoDisoverySetup() {
           \"uniq_id\":\"%s_energy_actual_forward\",\
           \"name\":\"%s energy forward\",\
           \"icon\":\"mdi:sine-wave\",\
-          \"stat_t\":\"ESP32MEP/%s/sensors\",\
+          \"stat_t\":\"%s/sensors\",\
           \"val_tpl\":\"{{ value_json.Fwd_Act_Wh}}\",\
           \"dev_cla\":\"energy\",\
           \"unit_of_meas\":\"Wh\",\
@@ -463,7 +471,7 @@ void MqttSensorHomeAssistantAutoDisoverySetup() {
           \"uniq_id\":\"%s_energy_actual_reverse\",\
           \"name\":\"%s energy reverse\",\
           \"icon\":\"mdi:sine-wave\",\
-          \"stat_t\":\"ESP32MEP/%s/sensors\",\
+          \"stat_t\":\"%s/sensors\",\
           \"val_tpl\":\"{{ value_json.Rev_Act_Wh}}\",\
           \"dev_cla\":\"energy\",\
           \"unit_of_meas\":\"Wh\",\
@@ -480,7 +488,7 @@ void MqttSensorHomeAssistantAutoDisoverySetup() {
           \"uniq_id\":\"%s_P_forward\",\
           \"name\":\"%s P forward\",\
           \"icon\":\"mdi:sine-wave\",\
-          \"stat_t\":\"ESP32MEP/%s/sensors\",\
+          \"stat_t\":\"%s/sensors\",\
           \"val_tpl\":\"{{ value_json.Fwd_W}}\",\
           \"dev_cla\":\"power\",\
           \"unit_of_meas\":\"W\",\
@@ -497,7 +505,7 @@ void MqttSensorHomeAssistantAutoDisoverySetup() {
           \"uniq_id\":\"%s_P_reverse\",\
           \"name\":\"%s P reverse\",\
           \"icon\":\"mdi:sine-wave\",\
-          \"stat_t\":\"ESP32MEP/%s/sensors\",\
+          \"stat_t\":\"%s/sensors\",\
           \"val_tpl\":\"{{ value_json.Rev_W}}\",\
           \"dev_cla\":\"power\",\
           \"unit_of_meas\":\"W\",\
@@ -514,7 +522,7 @@ void MqttSensorHomeAssistantAutoDisoverySetup() {
           \"uniq_id\":\"%s_A_L1\",\
           \"name\":\"%s A L1\",\
           \"icon\":\"mdi:sine-wave\",\
-          \"stat_t\":\"ESP32MEP/%s/sensors\",\
+          \"stat_t\":\"%s/sensors\",\
           \"val_tpl\":\"{{ value_json.L1_RMS_A}}\",\
           \"dev_cla\":\"current\",\
           \"unit_of_meas\":\"A\",\
@@ -531,7 +539,7 @@ void MqttSensorHomeAssistantAutoDisoverySetup() {
           \"uniq_id\":\"%s_A_L2\",\
           \"name\":\"%s A L2\",\
           \"icon\":\"mdi:sine-wave\",\
-          \"stat_t\":\"ESP32MEP/%s/sensors\",\
+          \"stat_t\":\"%s/sensors\",\
           \"val_tpl\":\"{{ value_json.L2_RMS_A}}\",\
           \"dev_cla\":\"current\",\
           \"unit_of_meas\":\"A\",\
@@ -548,7 +556,7 @@ void MqttSensorHomeAssistantAutoDisoverySetup() {
           \"uniq_id\":\"%s_A_L3\",\
           \"name\":\"%s A L3\",\
           \"icon\":\"mdi:sine-wave\",\
-          \"stat_t\":\"ESP32MEP/%s/sensors\",\
+          \"stat_t\":\"%s/sensors\",\
           \"val_tpl\":\"{{ value_json.L3_RMS_A}}\",\
           \"dev_cla\":\"current\",\
           \"unit_of_meas\":\"A\",\
@@ -565,7 +573,7 @@ void MqttSensorHomeAssistantAutoDisoverySetup() {
           \"uniq_id\":\"%s_V_L1\",\
           \"name\":\"%s V L1\",\
           \"icon\":\"mdi:sine-wave\",\
-          \"stat_t\":\"ESP32MEP/%s/sensors\",\
+          \"stat_t\":\"%s/sensors\",\
           \"val_tpl\":\"{{ value_json.L1_RMS_V}}\",\
           \"dev_cla\":\"voltage\",\
           \"unit_of_meas\":\"V\",\
@@ -582,7 +590,7 @@ void MqttSensorHomeAssistantAutoDisoverySetup() {
           \"uniq_id\":\"%s_V_L2\",\
           \"name\":\"%s V L2\",\
           \"icon\":\"mdi:sine-wave\",\
-          \"stat_t\":\"ESP32MEP/%s/sensors\",\
+          \"stat_t\":\"%s/sensors\",\
           \"val_tpl\":\"{{ value_json.L2_RMS_V}}\",\
           \"dev_cla\":\"voltage\",\
           \"unit_of_meas\":\"V\",\
@@ -599,7 +607,7 @@ void MqttSensorHomeAssistantAutoDisoverySetup() {
           \"uniq_id\":\"%s_V_L3\",\
           \"name\":\"%s V L3\",\
           \"icon\":\"mdi:sine-wave\",\
-          \"stat_t\":\"ESP32MEP/%s/sensors\",\
+          \"stat_t\":\"%s/sensors\",\
           \"val_tpl\":\"{{ value_json.L3_RMS_V}}\",\
           \"dev_cla\":\"voltage\",\
           \"unit_of_meas\":\"V\",\
@@ -616,7 +624,7 @@ void MqttSensorHomeAssistantAutoDisoverySetup() {
           \"uniq_id\":\"%s_W_Forward_L1\",\
           \"name\":\"%s W Forward L1\",\
           \"icon\":\"mdi:sine-wave\",\
-          \"stat_t\":\"ESP32MEP/%s/sensors\",\
+          \"stat_t\":\"%s/sensors\",\
           \"val_tpl\":\"{{ value_json.L1_Fwd_W}}\",\
           \"dev_cla\":\"voltage\",\
           \"unit_of_meas\":\"V\",\
@@ -633,7 +641,7 @@ void MqttSensorHomeAssistantAutoDisoverySetup() {
           \"uniq_id\":\"%s_W_Forward_L2\",\
           \"name\":\"%s W Forward L2\",\
           \"icon\":\"mdi:sine-wave\",\
-          \"stat_t\":\"ESP32MEP/%s/sensors\",\
+          \"stat_t\":\"%s/sensors\",\
           \"val_tpl\":\"{{ value_json.L2_Fwd_W}}\",\
           \"dev_cla\":\"voltage\",\
           \"unit_of_meas\":\"V\",\
@@ -650,7 +658,7 @@ void MqttSensorHomeAssistantAutoDisoverySetup() {
           \"uniq_id\":\"%s_W_Forward_L3\",\
           \"name\":\"%s W Forward L3\",\
           \"icon\":\"mdi:sine-wave\",\
-          \"stat_t\":\"ESP32MEP/%s/sensors\",\
+          \"stat_t\":\"%s/sensors\",\
           \"val_tpl\":\"{{ value_json.L3_Fwd_W}}\",\
           \"dev_cla\":\"voltage\",\
           \"unit_of_meas\":\"V\",\
@@ -667,7 +675,7 @@ void MqttSensorHomeAssistantAutoDisoverySetup() {
           \"uniq_id\":\"%s_W_Reverse_L1\",\
           \"name\":\"%s W Reverse L1\",\
           \"icon\":\"mdi:sine-wave\",\
-          \"stat_t\":\"ESP32MEP/%s/sensors\",\
+          \"stat_t\":\"%s/sensors\",\
           \"val_tpl\":\"{{ value_json.L1_Rev_W}}\",\
           \"dev_cla\":\"voltage\",\
           \"unit_of_meas\":\"V\",\
@@ -684,7 +692,7 @@ void MqttSensorHomeAssistantAutoDisoverySetup() {
           \"uniq_id\":\"%s_W_Reverse_L2\",\
           \"name\":\"%s W Reverse L2\",\
           \"icon\":\"mdi:sine-wave\",\
-          \"stat_t\":\"ESP32MEP/%s/sensors\",\
+          \"stat_t\":\"%s/sensors\",\
           \"val_tpl\":\"{{ value_json.L2_Rev_W}}\",\
           \"dev_cla\":\"voltage\",\
           \"unit_of_meas\":\"V\",\
@@ -701,7 +709,7 @@ void MqttSensorHomeAssistantAutoDisoverySetup() {
           \"uniq_id\":\"%s_W_Reverse_L3\",\
           \"name\":\"%s W Reverse L3\",\
           \"icon\":\"mdi:sine-wave\",\
-          \"stat_t\":\"ESP32MEP/%s/sensors\",\
+          \"stat_t\":\"%s/sensors\",\
           \"val_tpl\":\"{{ value_json.L3_Rev_W}}\",\
           \"dev_cla\":\"voltage\",\
           \"unit_of_meas\":\"V\",\
@@ -726,76 +734,105 @@ add "hw" to string - and use abbreviations from https://www.home-assistant.io/do
   }
 }
 
-void MqttReadSendSensorData() { //ESP_SW_Version
-//DATA CURRENTLY BEING SENT
-  //char CurrentDateTimeString[15] = ""; //, CurrentDateTime[15] = "";
-  char Fwd_Act_Wh[15] = "", Rev_Act_Wh[15] = ""; 
-  char Fwd_W[15] = "", Rev_W[15] = "", Freq_mHz[15] = "";
-  char L1_RMS_A[15] = "", L2_RMS_A[15] = "", L3_RMS_A[15] = "";
-  char L1_RMS_V[15] = "", L2_RMS_V[15] = "", L3_RMS_V[15] = "";
-  char L1_Fwd_W[15] = "", L2_Fwd_W[15] = "", L3_Fwd_W[15] = "";
-  char L1_Rev_W[15] = "", L2_Rev_W[15] = "", L3_Rev_W[15] = "";
-  char Fwd_Avg_W[15] = "", Rev_Avg_W[15] = "";
+void MqttReadSendSensorData() {
+  
+  char mqtt_topic_data[100];
+  char mqtt_payload_data[300];
 
-  //sprintf(CurrentDateTimeString, "%s", GetESP32DateTime(false).c_str())
-  //sprintf(CurrentDateTime, "%s", GetESP32DateTime(true).c_str()) //maybe pass data below to MQTT later?
-  sprintf(Fwd_Act_Wh, "%lu", ConsumptionData.BT23_Fwd_Act_Wh);
-  sprintf(Rev_Act_Wh, "%lu", ConsumptionData.BT23_Rev_Act_Wh);
-  sprintf(Fwd_W, "%lu", ConsumptionData.BT28_Fwd_W);
-  sprintf(Rev_W, "%lu", ConsumptionData.BT28_Rev_W);
-  sprintf(Freq_mHz, "%lu", ConsumptionData.BT28_Freq_mHz);
-  sprintf(L1_RMS_A, "%lu", ConsumptionData.BT28_RMS_mA_L1);
-  sprintf(L2_RMS_A, "%lu", ConsumptionData.BT28_RMS_mA_L2);
-  sprintf(L3_RMS_A, "%lu", ConsumptionData.BT28_RMS_mA_L3);
-  sprintf(L1_RMS_V, "%lu", ConsumptionData.BT28_RMS_mV_L1);
-  sprintf(L2_RMS_V, "%lu", ConsumptionData.BT28_RMS_mV_L2);
-  sprintf(L3_RMS_V, "%lu", ConsumptionData.BT28_RMS_mV_L3);
-  sprintf(L1_Fwd_W, "%lu", ConsumptionData.BT28_Fwd_W_L1);
-  sprintf(L2_Fwd_W, "%lu", ConsumptionData.BT28_Fwd_W_L2);
-  sprintf(L3_Fwd_W, "%lu", ConsumptionData.BT28_Fwd_W_L3);
-  sprintf(L1_Rev_W, "%lu", ConsumptionData.BT28_Rev_W_L1);
-  sprintf(L2_Rev_W, "%lu", ConsumptionData.BT28_Rev_W_L2);
-  sprintf(L3_Rev_W, "%lu", ConsumptionData.BT28_Rev_W_L3);
-  //maybe pass data below to MQTT later?
-/*  sprintf(Fwd_Avg_W, "%lu", ConsumptionData.BT28_Fwd_Avg_W) 
-  sprintf(Rev_Avg_W, "%lu", ConsumptionData.BT28_Rev_Avg_W)
-  sprintf(L1_Fwd_Avg_W, "%lu", ConsumptionData.BT28_Fwd_Avg_W_L1)
-  sprintf(L2_Fwd_Avg_W, "%lu", ConsumptionData.BT28_Fwd_Avg_W_L2)
-  sprintf(L3_Fwd_Avg_W, "%lu", ConsumptionData.BT28_Fwd_Avg_W_L3)
-  sprintf(L1_Rev_Avg_W, "%lu", ConsumptionData.BT28_Rev_Avg_W_L1)
-  sprintf(L2_Rev_Avg_W, "%lu", ConsumptionData.BT28_Rev_Avg_W_L2)
-  sprintf(L3_Rev_Avg_W, "%lu", ConsumptionData.BT28_Rev_Avg_W_L3)
-*/
-//END OF DATA NOT CURRENTLY BEING SENT     
-    /* inspiration hvis det er nødvendigt at afrunde..
-      dtostrf(originalVariabel1, 4, 1, L1_RMS_V); //1 decimal, 4 karakterer, bruger variablen originalVariabel1 -> som danner V_L1
-      dtostrf(originalVariabel2, 4, 1, L2_RMS_V);
-      dtostrf(originalVariabel3, 4, 1, L3_RMS_V);
-    */
+  Serial.printf("Is connected to mqtt: %d\r\n", mqttclient.connected());
 
-  sprintf(mqtt_topic_data, "ESP32MEP/%s/sensors", deviceId); //CREATE TOPIC FOR CURRENT DEVICENAME (Can use another variable than deviceId, thats already in use in program)
+  sprintf(mqtt_topic_data, "%s/sensors/mydatajson", deviceId); //CREATE TOPIC FOR CURRENT DEVICENAME (Can use another variable than deviceId, thats already in use in program)
   sprintf(mqtt_payload_data, "{\
-    \"Fwd_Act_Wh\":%lu,\"Rev_Act_Wh\":%lu,\"Freq_mHz\":%lu,\
-    \"Fwd_W\":%lu,\"Rev_W\":%lu,\
-    \"L1_RMS_A\":%lu,\"L2_RMS_A\":%lu,\"L3_RMS_A\":%lu,\
-    \"L1_RMS_V\":%lu,\"L2_RMS_V\":%lu,\"L3_RMS_V\":%lu,\
-    \"L1_Fwd_W\":%lu,\"L2_Fwd_W\":%lu,\"L3_Fwd_W\":%lu,\
-    \"L1_Rev_W\":%lu,\"L2_Rev_W\":%lu,\"L3_Rev_W\":%lu,\
-    \"Fwd_Avg_W\":%lu,\"Rev_Avg_W\":%lu,\
-    \"L1_Fwd_Avg_W\":%lu,\"L2_Fwd_Avg_W\":%lu,\"L3_Fwd_Avg_W\":%lu,\
-    \"L1_Rev_Avg_W\":%lu,\"L2_Rev_Avg_W\":%lu,\"L3_Rev_Avg_W\":%lu\"\
-    }",\
-    Fwd_Act_Wh, Rev_Act_Wh, Freq_mHz,\
-    L1_RMS_A, L2_RMS_A, L3_RMS_A,\
-    L1_RMS_V, L2_RMS_V, L3_RMS_V,\
-    L1_Fwd_W, L2_Fwd_W, L3_Fwd_W,\
-    L1_Rev_W, L2_Rev_W, L3_Rev_W,\
-    Fwd_Avg_W, Rev_Avg_W\
-    //maybe pass data below to MQTT later?
-  /*  , 
-    L1_Fwd_Avg_W, L2_Fwd_Avg_W, L3_Fwd_Avg_W, 
-    L1_Rev_Avg_W, L2_Rev_Avg_W, L3_Rev_Avg_W 
-  */
-    ); 
-  mqttclient.publish(mqtt_topic_data, mqtt_payload_data);
+\"L1_RMS_A\":%lu,\"L2_RMS_A\":%lu,\"L3_RMS_A\":%lu,\
+\"L1_RMS_V\":%lu,\"L2_RMS_V\":%lu,\"L3_RMS_V\":%lu,\
+\"L1_PF_Fac\":%lu,\"L2_PF_Fac\":%lu,\"L3_PF_Fac\":%lu,\
+\"ExportReactive_VAr\":%lu,\"ImportReactive_VAr\":%lu\
+}",\
+      ConsumptionData.BT28_RMS_mA_L1, ConsumptionData.BT28_RMS_mA_L2, ConsumptionData.BT28_RMS_mA_L3,
+      ConsumptionData.BT28_RMS_mV_L1, ConsumptionData.BT28_RMS_mV_L2, ConsumptionData.BT28_RMS_mV_L3,
+      ConsumptionData.BT28_PowerFactor_Fac_L1, ConsumptionData.BT28_PowerFactor_Fac_L2, ConsumptionData.BT28_PowerFactor_Fac_L3,
+      ConsumptionData.BT28_ExportReactive_VAr, ConsumptionData.BT28_ImportReactive_VAr
+  );
+
+  Serial.printf("Is connected to mqtt: %d\r\n", mqttclient.connected());
+  Serial.printf("mqtt data \r\ntopic: %s\r\npayload: %s\r\n", mqtt_topic_data, mqtt_payload_data);
+
+  if (mqttclient.publish(mqtt_topic_data, mqtt_payload_data)) {
+    Serial.printf("Sent OK\r\n");
+  }
+  else {
+        Serial.printf("Sent NOK\r\n");
+  }
+
+  sprintf(mqtt_topic_data, "%s/meterConsumptionTotal/mydatajson", deviceId); //CREATE TOPIC FOR CURRENT DEVICENAME (Can use another variable than deviceId, thats already in use in program)
+  sprintf(mqtt_payload_data, "{\
+\"Fwd_Act_Wh\":%lu,\"Rev_Act_Wh\":%lu\
+}",\
+      ConsumptionData.BT23_Fwd_Act_Wh, ConsumptionData.BT23_Rev_Act_Wh
+  );
+
+  Serial.printf("mqtt data \r\ntopic: %s\r\npayload: %s\r\n", mqtt_topic_data, mqtt_payload_data);
+  if (mqttclient.publish(mqtt_topic_data, mqtt_payload_data)) {
+    Serial.printf("Sent OK\r\n");
+  }
+  else {
+        Serial.printf("Sent NOK\r\n");
+  }
+
+  sprintf(mqtt_topic_data, "%s/meterConsumptionFwd/mydatajson", deviceId); //CREATE TOPIC FOR CURRENT DEVICENAME (Can use another variable than deviceId, thats already in use in program)
+  sprintf(mqtt_payload_data, "{\
+\"Fwd_W\":%lu,\
+\"Fwd_Avg_W\":%lu,\
+\"L1_Fwd_W\":%lu,\"L2_Fwd_W\":%lu,\"L3_Fwd_W\":%lu,\
+\"L1_Fwd_Avg_W\":%lu,\"L2_Fwd_Avg_W\":%lu,\"L3_Fwd_Avg_W\":%lu\
+}",\
+  ConsumptionData.BT28_Fwd_W,
+  ConsumptionData.BT28_Fwd_Avg_W,
+  ConsumptionData.BT28_Fwd_W_L1, ConsumptionData.BT28_Fwd_W_L2, ConsumptionData.BT28_Fwd_W_L3,
+  ConsumptionData.BT28_Fwd_Avg_W_L1, ConsumptionData.BT28_Fwd_Avg_W_L2, ConsumptionData.BT28_Fwd_Avg_W_L3
+  );
+
+  Serial.printf("mqtt data \r\ntopic: %s\r\npayload: %s\r\n", mqtt_topic_data, mqtt_payload_data);
+  if (mqttclient.publish(mqtt_topic_data, mqtt_payload_data)) {
+    Serial.printf("Sent OK\r\n");
+  }
+  else {
+        Serial.printf("Sent NOK\r\n");
+  }
+
+  sprintf(mqtt_topic_data, "%s/meterConsumptionRev/mydatajson", deviceId); //CREATE TOPIC FOR CURRENT DEVICENAME (Can use another variable than deviceId, thats already in use in program)
+  sprintf(mqtt_payload_data, "{\
+\"Rev_W\":%lu,\
+\"Rev_Avg_W\":%lu,\
+\"L1_Rev_W\":%lu,\"L2_Rev_W\":%lu,\"L3_Rev_W\":%lu,\
+\"L1_Rev_Avg_W\":%lu,\"L2_Rev_Avg_W\":%lu,\"L3_Rev_Avg_W\":%lu\
+}",\
+  ConsumptionData.BT28_Rev_W,
+  ConsumptionData.BT28_Rev_Avg_W,
+  ConsumptionData.BT28_Rev_W_L1, ConsumptionData.BT28_Rev_W_L2, ConsumptionData.BT28_Rev_W_L3,
+  ConsumptionData.BT28_Rev_Avg_W_L1, ConsumptionData.BT28_Rev_Avg_W_L2, ConsumptionData.BT28_Rev_Avg_W_L3
+  );
+
+  Serial.printf("mqtt data \r\ntopic: %s\r\npayload: %s\r\n", mqtt_topic_data, mqtt_payload_data);
+  if (mqttclient.publish(mqtt_topic_data, mqtt_payload_data)) {
+    Serial.printf("Sent OK\r\n");
+  }
+  else {
+        Serial.printf("Sent NOK\r\n");
+  }
+
+  sprintf(mqtt_topic_data, "%s/frequency/mydatajson", deviceId); //CREATE TOPIC FOR CURRENT DEVICENAME (Can use another variable than deviceId, thats already in use in program)
+  sprintf(mqtt_payload_data, "{\
+\"Freq_mHz\":%lu\
+}",\
+     ConsumptionData.BT28_Freq_mHz
+  );
+
+  Serial.printf("mqtt data \r\ntopic: %s\r\npayload: %s\r\n", mqtt_topic_data, mqtt_payload_data);
+  if (mqttclient.publish(mqtt_topic_data, mqtt_payload_data)) {
+    Serial.printf("Sent OK\r\n");
+  }
+  else {
+        Serial.printf("Sent NOK\r\n");
+  }
 }

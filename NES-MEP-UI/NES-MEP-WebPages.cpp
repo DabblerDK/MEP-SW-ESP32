@@ -140,7 +140,7 @@ void HandleGetDashDataWS()
           ConsumptionData.BT28_Rev_W_L1,ConsumptionData.BT28_Rev_W_L2,ConsumptionData.BT28_Rev_W_L3,
           ConsumptionData.BT28_Fwd_Avg_W,ConsumptionData.BT28_Rev_Avg_W,
           ConsumptionData.BT28_Fwd_Avg_W_L1,ConsumptionData.BT28_Fwd_Avg_W_L2,ConsumptionData.BT28_Fwd_Avg_W_L3,
-          ConsumptionData.BT28_Rev_Avg_W_L1,ConsumptionData.BT28_Rev_Avg_W_L2,ConsumptionData.BT28_Rev_Avg_W_L3);
+          ConsumptionData.BT28_Rev_Avg_W_L1,ConsumptionData.BT28_Rev_Avg_W_L2,ConsumptionData.BT28_Rev_Avg_W_L3),
   MyWebServer.send(200, "application/json", pageBuffer);
   Serial.printf("Serving web request: GetDashDataWS with Fwd_Act_Wh=%lu and Rev_Act_Wh=%lu\r\n",ConsumptionData.BT23_Fwd_Act_Wh,ConsumptionData.BT23_Rev_Act_Wh);
 }
