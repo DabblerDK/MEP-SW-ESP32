@@ -1,4 +1,12 @@
 /* TEST
+
+MQTT DEV VERSION:
+Use at own risk - please know how to get back, if you brick the ESP and need to restart.
+Not currently able to test the code, just trying to contribute as much as possible and getting inputs and commits from great people arround.
+
+Code compiles without errors
+
+
 https://techtutorialsx.com/2019/07/21/esp32-arduino-updating-firmware-from-the-spiffs-file-system/
 https://github.com/tobozo/ESP32-targz
 

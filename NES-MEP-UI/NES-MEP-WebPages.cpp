@@ -25,6 +25,7 @@ extern char mep_key[];
 
 extern boolean mqtt_enable;
 extern boolean hassAutodiscov;
+extern char mqtt_topic[];
 extern char mqtt_server[];
 extern char mqtt_user[];
 extern char mqtt_password[];
@@ -188,6 +189,7 @@ void HandleWebRequest(String URL, String Filename, String ContentType, boolean V
     pageBuffer.replace("###mep_key###", mep_key);
     // MQTT TEST IMPLEMENTATION    
     pageBuffer.replace("###mqtt_enable###", String(mqtt_enable));
+    pageBuffer.replace("###mqtt_topic###", mqtt_topic);
     pageBuffer.replace("###mqtt_server###", mqtt_server);
     pageBuffer.replace("###mqtt_user###", mqtt_user);
     pageBuffer.replace("###mqtt_password###", mqtt_password);
@@ -244,7 +246,7 @@ boolean HandleLogin(String Login, String Password)
 }
 // MQTT TEST IMPLEMENTATION
 //void StoreNewConfig(String ssid, String pwd, String userlogin, String userpwd, String mepkey)
-void StoreNewConfig(String ssid, String pwd, String userlogin, String userpwd, String mepkey, boolean mqttenable, String mqttserver, String mqttuser, String mqttpassword, boolean hassAutodiscov)
+void StoreNewConfig(String ssid, String pwd, String userlogin, String userpwd, String mepkey, boolean mqttenable, String mqtttopic, String mqttserver, String mqttuser, String mqttpassword, boolean hassAutodiscov)
 // MQTT TEST IMPLEMENTATION END
 {
   
@@ -260,10 +262,12 @@ void StoreNewConfig(String ssid, String pwd, String userlogin, String userpwd, S
   preferences.putString("user_password",userpwd);
 // MQTT TEST IMPLEMENTATION
   Serial.printf("Mqtt_enable %d\r\n",mqttenable);
+  Serial.printf("Mqtt server: %s\r\n",mqtttopic.c_str());
   Serial.printf("Mqtt server: %s\r\n",mqttserver.c_str());
   Serial.printf("Mqtt user: %s\r\n",mqttuser.c_str());
   Serial.printf("Mqtt password: %s\r\n",mqttpassword.c_str());
   preferences.putBool("mqtt_enable",mqttenable);
+  preferences.putString("mqtt_topic",mqtttopic);
   preferences.putString("mqtt_server",mqttserver);
   preferences.putString("mqtt_user",mqttuser);
   preferences.putString("mqtt_password",mqttpassword);
@@ -342,6 +346,7 @@ void SetupWebPages()
                       MyWebServer.arg("userpwd"),
                       MyWebServer.arg("mepkey"),
                       mqttEnable,
+                      MyWebServer.arg("mqtttopic"),
                       MyWebServer.arg("mqttserver"),
                       MyWebServer.arg("mqttuser"),
                       MyWebServer.arg("mqttpassword"),
