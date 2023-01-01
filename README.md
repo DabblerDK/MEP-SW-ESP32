@@ -1,6 +1,8 @@
 # MEP-SW-ESP32 - MQTT EXPERIMENTAL ONLY - not tested
 Multipurpose Expansion Port (MEP) ESP32 Software for OSGP Smart Meters
 
+Please not I am not very familiar with GitHub, so use with extreme care and only by checking the code an compiling it yourself - because I have not found a way to update the binary files on GitHub.
+
 This is the repository holding the Software for OSGP Smart Meters (i.e. Echelon or NES). Please:
 
 - see https://github.com/OSGP-Alliance-MEP-and-Optical for further hardware specifiactions of these meters.

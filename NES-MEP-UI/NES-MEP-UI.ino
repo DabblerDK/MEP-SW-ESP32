@@ -21,6 +21,12 @@ extern MeterInfoStruct MeterInfo;
 extern ConsumptionDataStruct ConsumptionData;
 */
 
+void MqttSensorHomeAssistantAutoDisoverySetup();
+void MqttConnect();
+void MqttReadSendSensorData();
+void MqttSetup();
+void SerialEvent2();
+
 WiFiClient espClient;
 PubSubClient mqttclient(espClient);
 
@@ -47,14 +53,12 @@ char mep_key[21] = "";
 
 const char* deviceId = "ESP32-MEP-Dabbler"; // CAN BE REMOVED
 bool mqtt_enable = false;
-bool hass_autodiscovery = false;
+bool hassAutodiscov = false;
 char mqtt_server[15];
 char mqtt_user[33];
 char mqtt_password[65];
 char mqtt_topic_hass_create[100];
 char mqtt_payload_hass_create[300];
-char mqtt_topic_data[100];
-char mqtt_payload_data[300];
 String mqtt_sensor_array[25];
 
 extern MeterInfoStruct MeterInfo;
@@ -104,7 +108,7 @@ void setup(void) {
   preferences.getString("mqtt_server","").toCharArray(mqtt_server,sizeof(mqtt_server));
   preferences.getString("mqtt_user","").toCharArray(mqtt_user,sizeof(mqtt_user));
   preferences.getString("mqtt_password","").toCharArray(mqtt_password,sizeof(mqtt_password));
-  hass_autodiscovery = preferences.getBool("hass_autodiscovery",false);
+  hassAutodiscov = preferences.getBool("hassAutodiscov",false);
   // MQTT TEST IMPLEMENTATION END
   preferences.getString("mep_key","0000000000000000000000000000000000000000").toCharArray(mep_key,sizeof(mep_key));
 
@@ -120,7 +124,10 @@ void setup(void) {
   // Connect to WiFi network
   Serial.printf("wifi_ssid: '%s'\r\nwifi_pwd: '%s'\r\n",wifi_ssid,wifi_password);
   Serial.printf("user_login: '%s'\r\nuser_pwd: '%s'\r\n",user_login,user_password);
-  Serial.printf("mep_key: '%s'",mep_key);
+  Serial.printf("mep_key: '%s'\r\n",mep_key);
+  Serial.printf("mqtt enable: %d\r\nmqttserver: %s\r\n", mqtt_enable,mqtt_server);
+  Serial.printf("mqttuser: %s\r\nmqttpw: %s\r\n", mqtt_user, mqtt_password);
+  Serial.printf("hassAutodiscov: %d\r\n", hassAutodiscov);
 
   if(wifi_password == "") {
     WiFi.begin(wifi_ssid);
@@ -193,7 +200,7 @@ void setup(void) {
   //READ TOGGLE ENABLE HASS AUTODISCOVERY FROM WEBINTERFACE BEFORE EXECUTING FUNCTION
   if(mqtt_enable) {
     MqttSetup(); //only makes sense to set up MQTT when MEP data is present
-    if(hass_autodiscovery) {
+    if(hassAutodiscov) {
       MqttSensorHomeAssistantAutoDisoverySetup();
     }
   }
@@ -227,13 +234,15 @@ void loop(void) {
     Serial.println("");
   }
 
+  // MQTT TEST IMPLEMENTATION
+
   if(mqtt_enable) {
     static unsigned long LastMQTTSentMillis = 0;
 
     mqttclient.loop();
     if(millis() - LastMQTTSentMillis > 10000) {
       if (!mqttclient.connected()) {
-        MqttReconnect();
+        MqttConnect();
         delay(2000);
       } else {
         MqttReadSendSensorData();
@@ -256,11 +265,7 @@ void loop(void) {
   }
   if(SentAwaitingReply) {
 
-
     if(millis() - LastSentMillis > 10000) {
-      // MQTT TEST IMPLEMENTATION
-      mqttclient.loop();
-      // MQTT TEST IMPLEMENTATION END
       MEPEnable(false);
       RS3232Enable(false);
       Serial.printf("RS3232 reset 1/2. Dropping buffer with this contents:\r\n");
@@ -393,34 +398,41 @@ void loop(void) {
 
 void MqttSetup() {
   mqttclient.setServer(mqtt_server, 1883);
-  while (!mqttclient.connected()) {
-    Serial.print("Setting up MQTT connection... ");
-    if (mqttclient.connect(deviceId, mqtt_user, mqtt_password)) { //CHANGE deviceId to program
-      Serial.println("connected............... OK!"); //debug code can be removed
-    } else {
-      Serial.print("failed, rc="); //debug code can be removed
-      Serial.print(mqttclient.state());
-      Serial.println(" discarding setup, try again"); //debug code can be removed
-      break;
-    }
-  }
+  MqttConnect();
+
 }
 
-void MqttReconnect() {
-  while (!mqttclient.connected()) {
+void MqttConnect() {
+  if (!mqttclient.connected()) {
+    bool mqttConnectResult=false;
     Serial.print("Reconnecting to MQTT broker... ");
-    if (mqttclient.connect(deviceId, mqtt_user, mqtt_password)) {
+    Serial.printf("mqtt_user: '%s'\r\n",mqtt_user);
+    String localMqttUser = String(mqtt_user);
+    localMqttUser.trim(); //remove spaces
+    if (localMqttUser.isEmpty())
+    {
+      Serial.printf("mqtt connect without credentials\r\n");
+      mqttConnectResult = mqttclient.connect(deviceId);
+    }
+    else
+    {
+      Serial.printf("mqtt connect with credentials\r\n");
+      mqttConnectResult = mqttclient.connect(deviceId, mqtt_user, mqtt_password);
+    }
+
+    if (mqttConnectResult) {
       Serial.println("connected............ OK!"); //debug code can be removed?
     } else {
       Serial.print("failed, rc=");
       Serial.print(mqttclient.state());
       Serial.println(" trying again in next loop");
-      break;
     }
   }
 }
 
 void MqttSensorHomeAssistantAutoDisoverySetup() {
+  return; //mist1971 - commented out as I have not tested it
+
   //DATA NOT CURRENTLY BEING SENT - should only be initialized once if needed? Maybe enough just to pass information to the device class below
   char ESP_SW[15], ESP_SW_By[15], ESP_SW_Version[15], Meter_Manufacturer[15], Meter_Model[15], Meter_SW_Version[15], Utility_SN[15];
   sprintf(ESP_SW, "ESP32 MEP");
@@ -821,6 +833,7 @@ void MqttReadSendSensorData() {
         Serial.printf("Sent NOK\r\n");
   }
 
+
   sprintf(mqtt_topic_data, "%s/frequency/mydatajson", deviceId); //CREATE TOPIC FOR CURRENT DEVICENAME (Can use another variable than deviceId, thats already in use in program)
   sprintf(mqtt_payload_data, "{\
 \"Freq_mHz\":%lu\
@@ -835,4 +848,6 @@ void MqttReadSendSensorData() {
   else {
         Serial.printf("Sent NOK\r\n");
   }
+
+
 }

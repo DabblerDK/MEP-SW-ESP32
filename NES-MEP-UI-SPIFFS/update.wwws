@@ -348,6 +348,15 @@
 			<input name=userlogin placeholder=Login value="###user_login###">
 			<input name=userpwd placeholder=Password type=Password value="###user_pwd###">
 			<br>
+			MQTT setup: Server, user login and password: (Experimental and not tested - use at own risk)<br>
+			<input name=mqttenable value="###mqtt_enable###">
+			<input name=mqttserver placeholder=ServerIP value="###mqtt_server###">
+			<input name=mqttuser placeholder=Username value="###mqtt_user###">
+			<input name=mqttpassword placeholder=Password type=Password value="###mqtt_password###">
+			<br>
+			Home Assistant: Enable Auto Disovery (Experimental and not tested - use at own risk)
+			<input name=hassautodiscovery value="###hassAutodiscov###">
+			<br>
 			MEP key for power meter:<br>
 			<input name=mepkey placeholder="MEP Key as ASCII String (20 characters), no spaces" type=Password value="###mep_key###">
 			<br>
@@ -355,6 +364,7 @@
 		</form>
 	</body>
 </html>
+
 /www_sevenSeg.js
 // https://github.com/BrandonLWhite/sevenSeg.js/blob/gh-pages/sevenSeg.js
 
