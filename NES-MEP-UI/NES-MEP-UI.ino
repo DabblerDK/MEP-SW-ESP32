@@ -53,7 +53,7 @@ char mep_key[21] = "";
 
 const char* deviceId = "ESP32-MEP-Dabbler"; // CAN BE REMOVED
 bool mqtt_enable = false;
-bool hass_autodiscovery = false;
+bool hassAutodiscov = false;
 char mqtt_server[15];
 char mqtt_user[33];
 char mqtt_password[65];
@@ -108,7 +108,7 @@ void setup(void) {
   preferences.getString("mqtt_server","").toCharArray(mqtt_server,sizeof(mqtt_server));
   preferences.getString("mqtt_user","").toCharArray(mqtt_user,sizeof(mqtt_user));
   preferences.getString("mqtt_password","").toCharArray(mqtt_password,sizeof(mqtt_password));
-  hass_autodiscovery = preferences.getBool("hass_autodiscovery",false);
+  hassAutodiscov = preferences.getBool("hassAutodiscov",false);
   // MQTT TEST IMPLEMENTATION END
   preferences.getString("mep_key","0000000000000000000000000000000000000000").toCharArray(mep_key,sizeof(mep_key));
 
@@ -127,6 +127,7 @@ void setup(void) {
   Serial.printf("mep_key: '%s'\r\n",mep_key);
   Serial.printf("mqtt enable: %d\r\nmqttserver: %s\r\n", mqtt_enable,mqtt_server);
   Serial.printf("mqttuser: %s\r\nmqttpw: %s\r\n", mqtt_user, mqtt_password);
+  Serial.printf("hassAutodiscov: %d\r\n", hassAutodiscov);
 
   if(wifi_password == "") {
     WiFi.begin(wifi_ssid);
@@ -199,7 +200,7 @@ void setup(void) {
   //READ TOGGLE ENABLE HASS AUTODISCOVERY FROM WEBINTERFACE BEFORE EXECUTING FUNCTION
   if(mqtt_enable) {
     MqttSetup(); //only makes sense to set up MQTT when MEP data is present
-    if(hass_autodiscovery) {
+    if(hassAutodiscov) {
       MqttSensorHomeAssistantAutoDisoverySetup();
     }
   }
@@ -233,6 +234,8 @@ void loop(void) {
     Serial.println("");
   }
 
+  // MQTT TEST IMPLEMENTATION
+
   if(mqtt_enable) {
     static unsigned long LastMQTTSentMillis = 0;
 
@@ -261,7 +264,6 @@ void loop(void) {
     LastSentMillis = millis();
   }
   if(SentAwaitingReply) {
-
 
     if(millis() - LastSentMillis > 10000) {
       MEPEnable(false);
@@ -831,6 +833,7 @@ void MqttReadSendSensorData() {
         Serial.printf("Sent NOK\r\n");
   }
 
+
   sprintf(mqtt_topic_data, "%s/frequency/mydatajson", deviceId); //CREATE TOPIC FOR CURRENT DEVICENAME (Can use another variable than deviceId, thats already in use in program)
   sprintf(mqtt_payload_data, "{\
 \"Freq_mHz\":%lu\
@@ -845,4 +848,6 @@ void MqttReadSendSensorData() {
   else {
         Serial.printf("Sent NOK\r\n");
   }
+
+
 }
