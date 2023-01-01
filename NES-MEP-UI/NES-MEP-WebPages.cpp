@@ -36,8 +36,9 @@ extern MeterInfoStruct MeterInfo;
 String GetESP32DateTime(boolean JsonFormat)
 {
   struct tm tm;
-  
-  getLocalTime(&tm);
+  const int maxWaitTime = 10;
+
+  getLocalTime(&tm, maxWaitTime);
   return DateTime2String(tm.tm_year-100,tm.tm_mon+1,tm.tm_mday,tm.tm_hour,tm.tm_min,tm.tm_sec,tm.tm_wday+1,JsonFormat);
 }
 
