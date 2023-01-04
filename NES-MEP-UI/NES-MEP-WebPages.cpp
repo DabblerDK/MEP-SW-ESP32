@@ -24,11 +24,12 @@ extern char user_password[];
 extern char mep_key[];
 
 extern boolean mqtt_enable;
-extern boolean hassAutodiscov;
 extern char mqtt_topic[];
 extern char mqtt_server[];
 extern char mqtt_user[];
 extern char mqtt_password[];
+extern int mqtt_connection_state;
+extern char mqtt_connection_state_text[];
 
 extern byte MEPQueueNextIndex;
 extern ConsumptionDataStruct ConsumptionData;
@@ -187,14 +188,12 @@ void HandleWebRequest(String URL, String Filename, String ContentType, boolean V
     pageBuffer.replace("###user_login###", user_login);
     pageBuffer.replace("###user_pwd###", user_password);
     pageBuffer.replace("###mep_key###", mep_key);
-    // MQTT TEST IMPLEMENTATION    
     pageBuffer.replace("###mqtt_enable###", String(mqtt_enable));
+    pageBuffer.replace("###mqtt_connection_state_text###", mqtt_connection_state_text);
     pageBuffer.replace("###mqtt_topic###", mqtt_topic);
     pageBuffer.replace("###mqtt_server###", mqtt_server);
     pageBuffer.replace("###mqtt_user###", mqtt_user);
     pageBuffer.replace("###mqtt_password###", mqtt_password);
-    pageBuffer.replace("###hassAutodiscov###", String(hassAutodiscov));
-    // MQTT TEST IMPLEMENTATION
     pageBuffer.replace("###MaxMEPReplyLengthAsHex###", MaxMEPReplyLengthAsHex());
     MyWebServer.send(200, ContentType, pageBuffer);
     Serial.printf("File %s sent as response to %s\r\n", Filename.c_str(), URL.c_str());
@@ -246,7 +245,7 @@ boolean HandleLogin(String Login, String Password)
 }
 // MQTT TEST IMPLEMENTATION
 //void StoreNewConfig(String ssid, String pwd, String userlogin, String userpwd, String mepkey)
-void StoreNewConfig(String ssid, String pwd, String userlogin, String userpwd, String mepkey, boolean mqttenable, String mqtttopic, String mqttserver, String mqttuser, String mqttpassword, boolean hassAutodiscov)
+void StoreNewConfig(String ssid, String pwd, String userlogin, String userpwd, String mepkey, boolean mqttenable, String mqtttopic, String mqttserver, String mqttuser, String mqttpassword)
 // MQTT TEST IMPLEMENTATION END
 {
   
@@ -260,7 +259,6 @@ void StoreNewConfig(String ssid, String pwd, String userlogin, String userpwd, S
   Serial.printf("User Password: %s\r\n",userpwd.c_str());
   preferences.putString("user_login",userlogin);
   preferences.putString("user_password",userpwd);
-// MQTT TEST IMPLEMENTATION
   Serial.printf("Mqtt_enable %d\r\n",mqttenable);
   Serial.printf("Mqtt server: %s\r\n",mqtttopic.c_str());
   Serial.printf("Mqtt server: %s\r\n",mqttserver.c_str());
@@ -271,8 +269,6 @@ void StoreNewConfig(String ssid, String pwd, String userlogin, String userpwd, S
   preferences.putString("mqtt_server",mqttserver);
   preferences.putString("mqtt_user",mqttuser);
   preferences.putString("mqtt_password",mqttpassword);
-  preferences.putBool("hassAutodiscov",hassAutodiscov);
-// MQTT TEST IMPLEMENTATION END
   Serial.printf("MEP Key: %s\r\n",mepkey.c_str());
   preferences.putString("mep_key",mepkey);
 }
@@ -334,12 +330,7 @@ void SetupWebPages()
       bool mqttEnable=false;
       mqttEnable = MyWebServer.arg("mqttenable") == "1"?true:false;
       Serial.printf("SavePreferencesAndRestart, mqttenable_str=%s, mqttenable_bool=%d\r\n",MyWebServer.arg("mqttenable"),mqttEnable);
-      bool hassAutodiscov=false;
-      hassAutodiscov = MyWebServer.arg("hassautodiscovery") == "1"?true:false;
-      Serial.printf("SavePreferencesAndRestart, hassAutodiscov=%s, hassAutodiscov_bool=%d\r\n",MyWebServer.arg("hassautodiscovery"),hassAutodiscov);
 
-      // MQTT TEST IMPLEMENTATION 
-      //StoreNewConfig(MyWebServer.arg("ssid"),MyWebServer.arg("pwd"),MyWebServer.arg("userlogin"),MyWebServer.arg("userpwd"),MyWebServer.arg("mepkey"));
       StoreNewConfig(MyWebServer.arg("ssid"),
                       MyWebServer.arg("pwd"),
                       MyWebServer.arg("userlogin"),
@@ -349,10 +340,8 @@ void SetupWebPages()
                       MyWebServer.arg("mqtttopic"),
                       MyWebServer.arg("mqttserver"),
                       MyWebServer.arg("mqttuser"),
-                      MyWebServer.arg("mqttpassword"),
-                      hassAutodiscov
+                      MyWebServer.arg("mqttpassword")
                       );
-      // MQTT TEST IMPLEMENTATION END
       RedirectWebRequest("/");
       delay(5000);
       preferences.end();  

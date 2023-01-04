@@ -21,7 +21,6 @@ extern MeterInfoStruct MeterInfo;
 extern ConsumptionDataStruct ConsumptionData;
 */
 
-void MqttSensorHomeAssistantAutoDisoverySetup();
 void MqttConnect();
 void MqttReadSendSensorData();
 void MqttSetup();
@@ -53,14 +52,12 @@ char mep_key[21] = "";
 
 const char* deviceId = "ESP32-MEP-Dabbler"; // CAN BE REMOVED
 bool mqtt_enable = false;
-bool hassAutodiscov = false;
 char mqtt_topic[25];
 char mqtt_server[15];
 char mqtt_user[33];
 char mqtt_password[65];
-char mqtt_topic_hass_create[100];
-char mqtt_payload_hass_create[300];
-String mqtt_sensor_array[25];
+int mqtt_connection_state;
+String mqtt_connection_state_text = "";
 
 extern MeterInfoStruct MeterInfo;
 extern ConsumptionDataStruct ConsumptionData;
@@ -104,14 +101,11 @@ void setup(void) {
   preferences.getString("wifi_password","").toCharArray(wifi_password,sizeof(wifi_password));
   preferences.getString("user_login","mep").toCharArray(user_login,sizeof(user_login));
   preferences.getString("user_password","").toCharArray(user_password,sizeof(user_password));
-  // MQTT TEST IMPLEMENTATION
   mqtt_enable = preferences.getBool("mqtt_enable",false);
   preferences.getString("mqtt_topic","").toCharArray(mqtt_topic,sizeof(mqtt_topic));
   preferences.getString("mqtt_server","").toCharArray(mqtt_server,sizeof(mqtt_server));
   preferences.getString("mqtt_user","").toCharArray(mqtt_user,sizeof(mqtt_user));
   preferences.getString("mqtt_password","").toCharArray(mqtt_password,sizeof(mqtt_password));
-  hassAutodiscov = preferences.getBool("hassAutodiscov",false);
-  // MQTT TEST IMPLEMENTATION END
   preferences.getString("mep_key","0000000000000000000000000000000000000000").toCharArray(mep_key,sizeof(mep_key));
 
   if(String(mep_key) == "") 
@@ -129,7 +123,6 @@ void setup(void) {
   Serial.printf("mep_key: '%s'\r\n",mep_key);
   Serial.printf("mqtt enable: %d\r\nmqttserver: %s\r\n", mqtt_enable,mqtt_server);
   Serial.printf("mqttuser: %s\r\nmqttpw: %s\r\n", mqtt_user, mqtt_password);
-  Serial.printf("hassAutodiscov: %d\r\n", hassAutodiscov);
 
   if(wifi_password == "") {
     WiFi.begin(wifi_ssid);
@@ -198,17 +191,9 @@ void setup(void) {
     queueRequest("300034",mep_key,MEPQueue,&MEPQueueNextIndex,None); // BT52: UTC Clock
   }
 
-// MQTT TEST IMPLEMENTATION 
-  //READ TOGGLE ENABLE HASS AUTODISCOVERY FROM WEBINTERFACE BEFORE EXECUTING FUNCTION
   if(mqtt_enable) {
-    MqttSetup(); //only makes sense to set up MQTT when MEP data is present
-    if(hassAutodiscov) {
-      MqttSensorHomeAssistantAutoDisoverySetup();
-    }
+    MqttSetup();
   }
-//MQTT TEST IMPLEMENTATION END
-  
-  
 }
 
 void SerialEvent2() {
@@ -236,22 +221,44 @@ void loop(void) {
     Serial.println("");
   }
 
-  // MQTT TEST IMPLEMENTATION
-
   if(mqtt_enable) {
     static unsigned long LastMQTTSentMillis = 0;
-
     mqttclient.loop();
     if(millis() - LastMQTTSentMillis > 10000) {
-      if (!mqttclient.connected()) {
-        MqttConnect();
-        delay(2000);
+      mqtt_connection_state = mqttclient.state(); // getting connection state every 10 seconds
+      //make MQTT status readable
+      if (mqtt_connection_state == 0) {
+        mqtt_connection_state_text = "Connected";
+      } else if (mqtt_connection_state == 1)  {
+        mqtt_connection_state_text = "Wrong MQTT protocol version";
+      } else if (mqtt_connection_state == 2)  {
+        mqtt_connection_state_text = "Bad client ID";
+      } else if (mqtt_connection_state == 3)  {
+        mqtt_connection_state_text = "Server cant accept connection";
+      } else if (mqtt_connection_state == 4)  {
+        mqtt_connection_state_text = "User/pass rejected";
+      } else if (mqtt_connection_state == 5)  {
+        mqtt_connection_state_text = "Not authed";
+      } else if (mqtt_connection_state == -4)  {
+        mqtt_connection_state_text = "Server not responding";
+      } else if (mqtt_connection_state == -3)  {
+        mqtt_connection_state_text = "Connection broken";
+      } else if (mqtt_connection_state == -2)  {
+        mqtt_connection_state_text = "Network failed";
+      } else if (mqtt_connection_state == -1)  {
+        mqtt_connection_state_text = "Disconnected cleanly";
+      } else {
+        mqtt_connection_state_text = "Hakuna?";
+      }
+
+      if (!mqttclient.connected()) { // if disconnected
+        MqttConnect(); // reconnect
+        delay(500);
       } else {
         MqttReadSendSensorData();
         LastMQTTSentMillis=millis();
       }
     }
-    // MQTT TEST IMPLEMENTATION END
   }
 
   // Run web server
@@ -427,324 +434,9 @@ void MqttConnect() {
     } else {
       Serial.print("failed, rc=");
       Serial.print(mqttclient.state());
+      Serial.print(mqtt_connection_state_text);
       Serial.println(" trying again in next loop");
     }
-  }
-}
-
-void MqttSensorHomeAssistantAutoDisoverySetup() {
-  return; //mist1971 - commented out as I have not tested it
-
-  //DATA NOT CURRENTLY BEING SENT - should only be initialized once if needed? Maybe enough just to pass information to the device class below
-  char ESP_SW[15], ESP_SW_By[15], ESP_SW_Version[15], Meter_Manufacturer[15], Meter_Model[15], Meter_SW_Version[15], Utility_SN[15];
-  sprintf(ESP_SW, "ESP32 MEP");
-  sprintf(ESP_SW_By, "dabbler.dk");
-  sprintf(ESP_SW_Version, "%s", MeterInfo.BT01_MainFirmwareVersionNumber);
-  sprintf(Meter_Manufacturer, "%s", MeterInfo.BT01_Manufacturer);
-  sprintf(Meter_Model, "%s", MeterInfo.BT01_Model);
-  sprintf(Meter_SW_Version, "%i.%i", MeterInfo.BT01_FirmwareRevisionNumber);
-  sprintf(Utility_SN, "%s", MeterInfo.ET03_UtilitySerialNumber);
-//END OF DATA NOT CURRENTLY BEING SENT
-
-  //maybe implement check for already existing sensors in HASS to ensure sensors are not wrongly duplicated?
-  int i = 0;
-    sprintf(mqtt_payload_hass_create, "{\
-          \"uniq_id\":\"%s_time\",\
-          \"name\":\"%s time\",\
-          \"icon\":\"mdi:clock-outline\",\
-          \"stat_t\":\"%s/sensors\",\
-          \"val_tpl\":\"{{ value_json.CurrentDateTimeString}}\",\
-          \"dev_cla\":\"timestamp\",\
-          \"device\":{\"identifiers\":\"ESP32 MEP Interface @ Dabbler.dk\",\
-            \"manufacturer\":\"%s\",\
-            \"model\":\"%s\",\
-            \"name\":\"dab_%s\",\
-            \"sw_version\":\"%s\"\
-            }\
-          }", deviceId, deviceId, mqtt_topic, ESP_SW_By, ESP_SW, deviceId, ESP_SW_Version);
-    mqtt_sensor_array[i] = mqtt_payload_hass_create;
-    i++;
-    sprintf(mqtt_payload_hass_create, "{\
-          \"uniq_id\":\"%s_energy_actual_forward\",\
-          \"name\":\"%s energy forward\",\
-          \"icon\":\"mdi:sine-wave\",\
-          \"stat_t\":\"%s/sensors\",\
-          \"val_tpl\":\"{{ value_json.Fwd_Act_Wh}}\",\
-          \"dev_cla\":\"energy\",\
-          \"unit_of_meas\":\"Wh\",\
-          \"device\":{\"identifiers\":\"ESP32 MEP Interface @ Dabbler.dk\",\
-            \"manufacturer\":\"%s\",\
-            \"model\":\"%s\",\
-            \"name\":\"dab_%s\",\
-            \"sw_version\":\"%s\"\
-            }\
-          }", deviceId, deviceId, mqtt_topic, ESP_SW_By, ESP_SW, deviceId, ESP_SW_Version);
-    mqtt_sensor_array[i] = mqtt_payload_hass_create;
-    i++;
-    sprintf(mqtt_payload_hass_create, "{\
-          \"uniq_id\":\"%s_energy_actual_reverse\",\
-          \"name\":\"%s energy reverse\",\
-          \"icon\":\"mdi:sine-wave\",\
-          \"stat_t\":\"%s/sensors\",\
-          \"val_tpl\":\"{{ value_json.Rev_Act_Wh}}\",\
-          \"dev_cla\":\"energy\",\
-          \"unit_of_meas\":\"Wh\",\
-          \"device\":{\"identifiers\":\"ESP32 MEP Interface @ Dabbler.dk\",\
-            \"manufacturer\":\"%s\",\
-            \"model\":\"%s\",\
-            \"name\":\"dab_%s\",\
-            \"sw_version\":\"%s\"\
-            }\
-          }", deviceId, deviceId, mqtt_topic, ESP_SW_By, ESP_SW, deviceId, ESP_SW_Version);
-    mqtt_sensor_array[i] = mqtt_payload_hass_create;
-    i++;
-    sprintf(mqtt_payload_hass_create, "{\
-          \"uniq_id\":\"%s_P_forward\",\
-          \"name\":\"%s P forward\",\
-          \"icon\":\"mdi:sine-wave\",\
-          \"stat_t\":\"%s/sensors\",\
-          \"val_tpl\":\"{{ value_json.Fwd_W}}\",\
-          \"dev_cla\":\"power\",\
-          \"unit_of_meas\":\"W\",\
-          \"device\":{\"identifiers\":\"ESP32 MEP Interface @ Dabbler.dk\",\
-            \"manufacturer\":\"%s\",\
-            \"model\":\"%s\",\
-            \"name\":\"dab_%s\",\
-            \"sw_version\":\"%s\"\
-            }\
-          }", deviceId, deviceId, mqtt_topic, ESP_SW_By, ESP_SW, deviceId, ESP_SW_Version);
-    mqtt_sensor_array[i] = mqtt_payload_hass_create;
-    i++;
-    sprintf(mqtt_payload_hass_create, "{\
-          \"uniq_id\":\"%s_P_reverse\",\
-          \"name\":\"%s P reverse\",\
-          \"icon\":\"mdi:sine-wave\",\
-          \"stat_t\":\"%s/sensors\",\
-          \"val_tpl\":\"{{ value_json.Rev_W}}\",\
-          \"dev_cla\":\"power\",\
-          \"unit_of_meas\":\"W\",\
-          \"device\":{\"identifiers\":\"ESP32 MEP Interface @ Dabbler.dk\",\
-            \"manufacturer\":\"%s\",\
-            \"model\":\"%s\",\
-            \"name\":\"dab_%s\",\
-            \"sw_version\":\"%s\"\
-            }\
-          }", deviceId, deviceId, mqtt_topic, ESP_SW_By, ESP_SW, deviceId, ESP_SW_Version);
-    mqtt_sensor_array[i] = mqtt_payload_hass_create;
-    i++;
-    sprintf(mqtt_payload_hass_create, "{\
-          \"uniq_id\":\"%s_A_L1\",\
-          \"name\":\"%s A L1\",\
-          \"icon\":\"mdi:sine-wave\",\
-          \"stat_t\":\"%s/sensors\",\
-          \"val_tpl\":\"{{ value_json.L1_RMS_A}}\",\
-          \"dev_cla\":\"current\",\
-          \"unit_of_meas\":\"A\",\
-          \"device\":{\"identifiers\":\"ESP32 MEP Interface @ Dabbler.dk\",\
-            \"manufacturer\":\"%s\",\
-            \"model\":\"%s\",\
-            \"name\":\"dab_%s\",\
-            \"sw_version\":\"%s\"\
-            }\
-          }", deviceId, deviceId, mqtt_topic, ESP_SW_By, ESP_SW, deviceId, ESP_SW_Version);
-    mqtt_sensor_array[i] = mqtt_payload_hass_create;
-    i++;
-    sprintf(mqtt_payload_hass_create, "{\
-          \"uniq_id\":\"%s_A_L2\",\
-          \"name\":\"%s A L2\",\
-          \"icon\":\"mdi:sine-wave\",\
-          \"stat_t\":\"%s/sensors\",\
-          \"val_tpl\":\"{{ value_json.L2_RMS_A}}\",\
-          \"dev_cla\":\"current\",\
-          \"unit_of_meas\":\"A\",\
-          \"device\":{\"identifiers\":\"ESP32 MEP Interface @ Dabbler.dk\",\
-            \"manufacturer\":\"%s\",\
-            \"model\":\"%s\",\
-            \"name\":\"dab_%s\",\
-            \"sw_version\":\"%s\"\
-            }\
-          }", deviceId, deviceId, mqtt_topic, ESP_SW_By, ESP_SW, deviceId, ESP_SW_Version);
-    mqtt_sensor_array[i] = mqtt_payload_hass_create;
-    i++;
-    sprintf(mqtt_payload_hass_create, "{\
-          \"uniq_id\":\"%s_A_L3\",\
-          \"name\":\"%s A L3\",\
-          \"icon\":\"mdi:sine-wave\",\
-          \"stat_t\":\"%s/sensors\",\
-          \"val_tpl\":\"{{ value_json.L3_RMS_A}}\",\
-          \"dev_cla\":\"current\",\
-          \"unit_of_meas\":\"A\",\
-          \"device\":{\"identifiers\":\"ESP32 MEP Interface @ Dabbler.dk\",\
-            \"manufacturer\":\"%s\",\
-            \"model\":\"%s\",\
-            \"name\":\"dab_%s\",\
-            \"sw_version\":\"%s\"\
-            }\
-          }", deviceId, deviceId, mqtt_topic, ESP_SW_By, ESP_SW, deviceId, ESP_SW_Version);
-    mqtt_sensor_array[i] = mqtt_payload_hass_create;
-    i++;
-    sprintf(mqtt_payload_hass_create, "{\
-          \"uniq_id\":\"%s_V_L1\",\
-          \"name\":\"%s V L1\",\
-          \"icon\":\"mdi:sine-wave\",\
-          \"stat_t\":\"%s/sensors\",\
-          \"val_tpl\":\"{{ value_json.L1_RMS_V}}\",\
-          \"dev_cla\":\"voltage\",\
-          \"unit_of_meas\":\"V\",\
-          \"device\":{\"identifiers\":\"ESP32 MEP Interface @ Dabbler.dk\",\
-            \"manufacturer\":\"%s\",\
-            \"model\":\"%s\",\
-            \"name\":\"dab_%s\",\
-            \"sw_version\":\"%s\"\
-            }\
-          }", deviceId, deviceId, mqtt_topic, ESP_SW_By, ESP_SW, deviceId, ESP_SW_Version);
-    mqtt_sensor_array[i] = mqtt_payload_hass_create;
-    i++;
-    sprintf(mqtt_payload_hass_create, "{\
-          \"uniq_id\":\"%s_V_L2\",\
-          \"name\":\"%s V L2\",\
-          \"icon\":\"mdi:sine-wave\",\
-          \"stat_t\":\"%s/sensors\",\
-          \"val_tpl\":\"{{ value_json.L2_RMS_V}}\",\
-          \"dev_cla\":\"voltage\",\
-          \"unit_of_meas\":\"V\",\
-          \"device\":{\"identifiers\":\"ESP32 MEP Interface @ Dabbler.dk\",\
-            \"manufacturer\":\"%s\",\
-            \"model\":\"%s\",\
-            \"name\":\"dab_%s\",\
-            \"sw_version\":\"%s\"\
-            }\
-          }", deviceId, deviceId, mqtt_topic, ESP_SW_By, ESP_SW, deviceId, ESP_SW_Version);
-    mqtt_sensor_array[i] = mqtt_payload_hass_create;
-    i++;
-    sprintf(mqtt_payload_hass_create, "{\
-          \"uniq_id\":\"%s_V_L3\",\
-          \"name\":\"%s V L3\",\
-          \"icon\":\"mdi:sine-wave\",\
-          \"stat_t\":\"%s/sensors\",\
-          \"val_tpl\":\"{{ value_json.L3_RMS_V}}\",\
-          \"dev_cla\":\"voltage\",\
-          \"unit_of_meas\":\"V\",\
-          \"device\":{\"identifiers\":\"ESP32 MEP Interface @ Dabbler.dk\",\
-            \"manufacturer\":\"%s\",\
-            \"model\":\"%s\",\
-            \"name\":\"dab_%s\",\
-            \"sw_version\":\"%s\"\
-            }\
-          }", deviceId, deviceId, mqtt_topic, ESP_SW_By, ESP_SW, deviceId, ESP_SW_Version);
-    mqtt_sensor_array[i] = mqtt_payload_hass_create;
-    i++;
-    sprintf(mqtt_payload_hass_create, "{\
-          \"uniq_id\":\"%s_W_Forward_L1\",\
-          \"name\":\"%s W Forward L1\",\
-          \"icon\":\"mdi:sine-wave\",\
-          \"stat_t\":\"%s/sensors\",\
-          \"val_tpl\":\"{{ value_json.L1_Fwd_W}}\",\
-          \"dev_cla\":\"voltage\",\
-          \"unit_of_meas\":\"V\",\
-          \"device\":{\"identifiers\":\"ESP32 MEP Interface @ Dabbler.dk\",\
-            \"manufacturer\":\"%s\",\
-            \"model\":\"%s\",\
-            \"name\":\"dab_%s\",\
-            \"sw_version\":\"%s\"\
-            }\
-          }", deviceId, deviceId, mqtt_topic, ESP_SW_By, ESP_SW, deviceId, ESP_SW_Version);
-    mqtt_sensor_array[i] = mqtt_payload_hass_create;
-    i++;
-    sprintf(mqtt_payload_hass_create, "{\
-          \"uniq_id\":\"%s_W_Forward_L2\",\
-          \"name\":\"%s W Forward L2\",\
-          \"icon\":\"mdi:sine-wave\",\
-          \"stat_t\":\"%s/sensors\",\
-          \"val_tpl\":\"{{ value_json.L2_Fwd_W}}\",\
-          \"dev_cla\":\"voltage\",\
-          \"unit_of_meas\":\"V\",\
-          \"device\":{\"identifiers\":\"ESP32 MEP Interface @ Dabbler.dk\",\
-            \"manufacturer\":\"%s\",\
-            \"model\":\"%s\",\
-            \"name\":\"dab_%s\",\
-            \"sw_version\":\"%s\"\
-            }\
-          }", deviceId, deviceId, mqtt_topic, ESP_SW_By, ESP_SW, deviceId, ESP_SW_Version);
-    mqtt_sensor_array[i] = mqtt_payload_hass_create;
-    i++;
-    sprintf(mqtt_payload_hass_create, "{\
-          \"uniq_id\":\"%s_W_Forward_L3\",\
-          \"name\":\"%s W Forward L3\",\
-          \"icon\":\"mdi:sine-wave\",\
-          \"stat_t\":\"%s/sensors\",\
-          \"val_tpl\":\"{{ value_json.L3_Fwd_W}}\",\
-          \"dev_cla\":\"voltage\",\
-          \"unit_of_meas\":\"V\",\
-          \"device\":{\"identifiers\":\"ESP32 MEP Interface @ Dabbler.dk\",\
-            \"manufacturer\":\"%s\",\
-            \"model\":\"%s\",\
-            \"name\":\"dab_%s\",\
-            \"sw_version\":\"%s\"\
-            }\
-          }", deviceId, deviceId, mqtt_topic, ESP_SW_By, ESP_SW, deviceId, ESP_SW_Version);
-    mqtt_sensor_array[i] = mqtt_payload_hass_create;
-    i++;
-    sprintf(mqtt_payload_hass_create, "{\
-          \"uniq_id\":\"%s_W_Reverse_L1\",\
-          \"name\":\"%s W Reverse L1\",\
-          \"icon\":\"mdi:sine-wave\",\
-          \"stat_t\":\"%s/sensors\",\
-          \"val_tpl\":\"{{ value_json.L1_Rev_W}}\",\
-          \"dev_cla\":\"voltage\",\
-          \"unit_of_meas\":\"V\",\
-          \"device\":{\"identifiers\":\"ESP32 MEP Interface @ Dabbler.dk\",\
-            \"manufacturer\":\"%s\",\
-            \"model\":\"%s\",\
-            \"name\":\"dab_%s\",\
-            \"sw_version\":\"%s\"\
-            }\
-          }", deviceId, deviceId, mqtt_topic, ESP_SW_By, ESP_SW, deviceId, ESP_SW_Version);
-    mqtt_sensor_array[i] = mqtt_payload_hass_create;
-    i++;
-    sprintf(mqtt_payload_hass_create, "{\
-          \"uniq_id\":\"%s_W_Reverse_L2\",\
-          \"name\":\"%s W Reverse L2\",\
-          \"icon\":\"mdi:sine-wave\",\
-          \"stat_t\":\"%s/sensors\",\
-          \"val_tpl\":\"{{ value_json.L2_Rev_W}}\",\
-          \"dev_cla\":\"voltage\",\
-          \"unit_of_meas\":\"V\",\
-          \"device\":{\"identifiers\":\"ESP32 MEP Interface @ Dabbler.dk\",\
-            \"manufacturer\":\"%s\",\
-            \"model\":\"%s\",\
-            \"name\":\"dab_%s\",\
-            \"sw_version\":\"%s\"\
-            }\
-          }", deviceId, deviceId, mqtt_topic, ESP_SW_By, ESP_SW, deviceId, ESP_SW_Version);
-    mqtt_sensor_array[i] = mqtt_payload_hass_create;
-    i++;
-    sprintf(mqtt_payload_hass_create, "{\
-          \"uniq_id\":\"%s_W_Reverse_L3\",\
-          \"name\":\"%s W Reverse L3\",\
-          \"icon\":\"mdi:sine-wave\",\
-          \"stat_t\":\"%s/sensors\",\
-          \"val_tpl\":\"{{ value_json.L3_Rev_W}}\",\
-          \"dev_cla\":\"voltage\",\
-          \"unit_of_meas\":\"V\",\
-          \"device\":{\"identifiers\":\"ESP32 MEP Interface @ Dabbler.dk\",\
-            \"manufacturer\":\"%s\",\
-            \"model\":\"%s\",\
-            \"name\":\"dab_%s\",\
-            \"sw_version\":\"%s\"\
-            }\
-          }", deviceId, deviceId, mqtt_topic, ESP_SW_By, ESP_SW, deviceId, ESP_SW_Version);
-    mqtt_sensor_array[i] = mqtt_payload_hass_create;
-/*
-add "hw" to string - and use abbreviations from https://www.home-assistant.io/docs/mqtt/discovery/
-// exp_aft: expire_after fx 300 sekunder
-// pl_avail: payload_available lave available topic der viser online / offline
-*/
-
-
-  for (int e = 0; e < i ; e++) { // Loop through above sensors and send via MQTT broker to autodiscover in HomeAssistant
-    sprintf(mqtt_topic_hass_create, "homeassistant/sensor/dabbler_sensor_%s_%i/config", mqtt_topic, e);
-    mqttclient.publish(mqtt_topic_hass_create, mqtt_sensor_array[e].c_str(), true); //hver sensor oprettes med et retain flag, så HASS altid ser sensorerne ved genstart af HASS.sensor_array[e][1].c_str()
   }
 }
 
