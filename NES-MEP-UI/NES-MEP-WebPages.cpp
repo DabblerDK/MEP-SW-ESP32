@@ -305,6 +305,10 @@ void SetupWebPages()
   });
 
   // Actions that does NOT require authorization
+  
+  MyWebServer.on("/infoMqtt",                HTTP_GET,  []() {
+    HandleWebRequest("/",           "/www_infoMqtt.html",  "text/html", false);
+  });
   MyWebServer.on("/Login",                     HTTP_GET, []() {
     if(HandleLogin(MyWebServer.arg("login"),MyWebServer.arg("pwd")))
       RedirectWebRequest("/");

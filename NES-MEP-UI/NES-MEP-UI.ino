@@ -418,25 +418,30 @@ void MqttConnect() {
     Serial.printf("mqtt_user: '%s'\r\n",mqtt_user);
     String localMqttUser = String(mqtt_user);
     localMqttUser.trim(); //remove spaces
+    
+    char will_topic[100];
+    sprintf(will_topic, "%s/lwt", mqtt_topic);
     if (localMqttUser.isEmpty())
     {
       Serial.printf("mqtt connect without credentials\r\n");
-      mqttConnectResult = mqttclient.connect(deviceId);
+      mqttConnectResult = mqttclient.connect(deviceId, NULL, NULL, will_topic, 0, true, "Offline");
     }
     else
     {
       Serial.printf("mqtt connect with credentials\r\n");
-      mqttConnectResult = mqttclient.connect(deviceId, mqtt_user, mqtt_password);
+      mqttConnectResult = mqttclient.connect(deviceId, mqtt_user, mqtt_password, will_topic, 0, true, "Offline");
     }
 
     if (mqttConnectResult) {
       Serial.println("connected............ OK!"); //debug code can be removed?
+      mqttclient.publish(will_topic, "Online");
     } else {
       Serial.print("failed, rc=");
       Serial.print(mqttclient.state());
       Serial.print(mqtt_connection_state_text);
       Serial.println(" trying again in next loop");
     }
+    
   }
 }
 

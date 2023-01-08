@@ -7,4 +7,5 @@ for %%F in (www_*.*) do (
   type %%F>>update.wwws
   echo.>>update.wwws
 )
-pause
+TIMEOUT 5
+REM pause
