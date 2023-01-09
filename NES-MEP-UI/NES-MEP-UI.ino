@@ -434,7 +434,7 @@ void MqttConnect() {
 
     if (mqttConnectResult) {
       Serial.println("connected............ OK!"); //debug code can be removed?
-      mqttclient.publish(will_topic, "Online");
+      mqttclient.publish(will_topic, "Online", true);
     } else {
       Serial.print("failed, rc=");
       Serial.print(mqttclient.state());
