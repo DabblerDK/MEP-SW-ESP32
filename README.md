@@ -1,4 +1,10 @@
-# MEP-SW-ESP32 - MQTT EXPERIMENTAL ONLY - not tested
+# MEP-SW-ESP32 - MQTT EXPERIMENTAL ONLY - tested, but please know what you do.
+
+1) Updated software to implement MQTT which publishes meter data.
+2) If you decide to compile your own bin file, be aware that you also need Knolleary PubSubClient installed.
+3) Software does not contain Home Assistant Autodiscovery as of now.
+
+--- BELOW IS ORIGINAL READMO ---
 Multipurpose Expansion Port (MEP) ESP32 Software for OSGP Smart Meters
 
 Please not I am not very familiar with GitHub, so use with extreme care and only by checking the code an compiling it yourself - because I have not found a way to update the binary files on GitHub.
