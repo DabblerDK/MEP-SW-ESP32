@@ -75,3 +75,8 @@ input {
 	height: 10px;
 }
 
+.table-wrapper {
+	background-color: #fff;
+	padding: 1em;
+}
+

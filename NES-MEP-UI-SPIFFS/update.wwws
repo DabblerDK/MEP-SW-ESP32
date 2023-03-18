@@ -202,6 +202,21 @@
 <html>
 	<head>
 		<link rel="stylesheet" type="text/css" href="style.css" />
+		<link href="https://cdn.datatables.net/v/dt/jq-3.6.0/dt-1.13.4/b-2.3.6/b-html5-2.3.6/datatables.min.css" rel="stylesheet"/>
+ 		<script src="https://cdn.datatables.net/v/dt/jq-3.6.0/dt-1.13.4/b-2.3.6/b-html5-2.3.6/datatables.min.js"></script>
+		<script>
+			$(document).ready( function () {
+				$('#MEPQueueTable').dataTable( {
+					pageLength: 10,
+					dom: 'Bfrti',
+					buttons: [
+						'copyHtml5',
+						'csvHtml5'
+					],
+					paging: false
+				});
+			});
+		</script>
 	</head>
 	<body>  
 		###FILE:/menu-include.html###
@@ -226,18 +241,24 @@
 			<input type=submit value="Send" />
 		</form>
 		<center>
-			<table id="header">
-				<tr>
-					<th>Index</th>
-					<th>Millis</th>
-					<th>Request</th>
-					<th>Tries</th>
-					<th width="50%">Response</th>
-					<th width="450">Decoded Request and Response</th>
-					<th>Next Action</th>
-				</tr>
-				###MEPQueue###
-			</table>
+			<div class="table-wrapper">
+				<table id="MEPQueueTable">
+					<thead>
+						<tr>
+							<th>Index</th>
+							<th>Millis</th>
+							<th>Request</th>
+							<th>Tries</th>
+							<th width="50%">Response</th>
+							<th width="450">Decoded Request and Response</th>
+							<th>Next Action</th>
+						</tr>
+					</thead>
+					<tbody>
+						###MEPQueue###			
+					</tbody>
+				</table>
+			</div>
 		</center>
 	</body>
 </html>
@@ -788,6 +809,11 @@ input {
 	background-color: #3498db;
 	width: 0%;
 	height: 10px;
+}
+
+.table-wrapper {
+	background-color: #fff;
+	padding: 1em;
 }
 
 
