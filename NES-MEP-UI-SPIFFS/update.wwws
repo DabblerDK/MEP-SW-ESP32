@@ -173,12 +173,12 @@
     ###FILE:/menu-include.html###
 	<table style="background-color:#FFF; margin-top: 0px;">
 	  <tr>
-	    <td colspan="2" height="80" align="center"><H1><center>Forward Active KWh for L1, L2 and L3<div id="SevenSeg_Fwd_Wh" style="height: 70px; width: fit-content;"></div></td>
-		<td colspan="2" height="80" align="center"><H1><center>Reverse Active KWh for L1, L2 and L3<div id="SevenSeg_Rev_Wh" style="height: 70px; width: fit-content;"></div></td>
+	    <td colspan="2" height="80" align="center"><H1><center>Forward Active kilowatt hours (kWh) for L1, L2 and L3<div id="SevenSeg_Fwd_Wh" style="height: 70px; width: fit-content;"></div></td>
+		<td colspan="2" height="80" align="center"><H1><center>Reverse Active kilowatt hours (kWh) for L1, L2 and L3<div id="SevenSeg_Rev_Wh" style="height: 70px; width: fit-content;"></div></td>
 	  </tr>
 	  <tr>
-		<td colspan="2" align="center" style="border-bottom-width: 0px;"><H1><center>Forward Watt</center></H1></td>
-		<td colspan="2" align="center" style="border-bottom-width: 0px;"><H1><center>Reverse Watt</center></H1></td>
+		<td colspan="2" align="center" style="border-bottom-width: 0px;"><H1><center>Forward milliwatt (mW)</center></H1></td>
+		<td colspan="2" align="center" style="border-bottom-width: 0px;"><H1><center>Reverse milliwatt (mW)</center></H1></td>
 	  </tr>
 	  <tr>
 	    <td height="200" align="center" style="border-top-width: 0px; border-right-width: 0px;"><div id="gauge_Fwd_TotalW" style="width: 200px; height: 180px;"></div></td>
@@ -187,11 +187,11 @@
 		<td height="200" align="center" style="border-top-width: 0px; border-left-width: 0px;"><div id="gauge_Rev_W" style="width: 600px; height: 180px;"></div></td>
 	  </tr>
 	  <tr>
-	    <td colspan="2" height="200" align="center"><H1><center>Forward RMS mili Amp.</center></H1><div id="gauge_RMS_A" style="width: 600px; height: 180px;"></div></td>
-	    <td colspan="2" height="200" align="center"><H1><center>Forward RMS mili Volt</center></H1><div id="gauge_RMS_V" style="width: 600px; height: 180px;"></div></td>
+	    <td colspan="2" height="200" align="center"><H1><center>RMS milliampere (mA)</center></H1><div id="gauge_RMS_A" style="width: 600px; height: 180px;"></div></td>
+	    <td colspan="2" height="200" align="center"><H1><center>RMS millivolt (mV)</center></H1><div id="gauge_RMS_V" style="width: 600px; height: 180px;"></div></td>
 	  </tr>
 	  <tr>
-	    <td colspan="2" height="200" align="center"><H1><center>Forward mili Hz</center></H1><div id="gauge_Freq_mHz" style="width: 200px; height: 180px;"></div></td>
+	    <td colspan="2" height="200" align="center"><H1><center>Millihertz (mHz)</center></H1><div id="gauge_Freq_mHz" style="width: 200px; height: 180px;"></div></td>
 	    <td colspan="2" height="200">&nbsp</td>
 	  </tr>
 	</table>

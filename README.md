@@ -1,13 +1,5 @@
-# MEP-SW-ESP32 - MQTT EXPERIMENTAL ONLY - tested, but please know what you do.
-
-1) Updated software to implement MQTT which publishes meter data.
-2) If you decide to compile your own bin file, be aware that you also need Knolleary PubSubClient installed.
-3) Software does not contain Home Assistant Autodiscovery as of now.
-
---- BELOW IS ORIGINAL README ---
+# MEP-SW-ESP32
 Multipurpose Expansion Port (MEP) ESP32 Software for OSGP Smart Meters
-
-Please not I am not very familiar with GitHub, so use with extreme care and only by checking the code an compiling it yourself - because I have not found a way to update the binary files on GitHub.
 
 This is the repository holding the Software for OSGP Smart Meters (i.e. Echelon or NES). Please:
 
@@ -18,7 +10,8 @@ Note:
 - The software has been developed and compiled using Arduino IDE (we have tested v. 1.8.13 and 2.0.0, but will probably also work on other/later versions
 - We have added this URL as "Additional Board Manager URLs" (the File/Properties menu): https://dl.espressif.com/dl/package_esp32_index.json
 - During development we are using the "DOIT ESP32 DEVKIT V1" board from the "esp32 by Espressif Systems v. 1.0.6" package
-- We are reducing upload speed to 115200 for stability when uploading through the FTDI232/J5 connector
+- The software have a dependency on PubSubClient by Nick O'Leary <nick.oleary@gmail.com> for MQTT (we have been testing with version 2.8.0 of the library, but will expect it to work with any future versions as well)
+- MQTT implementation does NOT support Home Assistent Autodiscovery as of now.
 - The previous dependency on "SimpleFTPServer by Renzo Mischianti v. 2.1.2" has been removed as we only needed it to debug the SPIFFS wwws upload etc.
 - You need to obtain the MEP key (MBK key) yourself via your power company (where you buy yor power). It is a 20 ASCII character key (it might look like it is HEX, but it is NOT - so please do not try to convert it!). We actually only need the first 16 ASCII characters, but if you enter the full key the software will handle it correctly.
 - The Dashboard page should always work without login/password, but for the rest of the pages you need to supply the login/password you chose on the configuration page (the module also accept your wifi name and password as a fail safe).
@@ -26,7 +19,7 @@ Note:
 
 Initial startup procedure - when our software is NOT installed:
 As we are using the SPIFFS filesystem for web files and your ESP32 most likely does not have our software installed, you need to follow this procedure for the initial startup of the module:
-1. Warning: Make sure to adjust the DC-DC buck converter to 3.6v before sending any power to the ESP32 module. See the hardware notes.
+1. Warning: Make sure to adjust the DC-DC buck converter to 3.4-3.5v before sending any power to the ESP32 module. See the hardware notes.
 2. Warning: Make sure your FTDI232 is only providng 3.3v when jumped to 3.3v. Some of them sends 5v power and that will fry your ESP32.
 3. Install a jumper between pin 1 and 2, and remove the jumper between pin 3 and 4 on J7. This will make sure the ESP32 is in programming mode and gets power from the FTDI232 module
 4. Insert a FTDI232 module in the J5 holes. If you angle it, the pin headers of the FTDI232 will make a fair connection to the PCB holes. Make sure to orient the FTDI232 module correctly: on MEP module version 1.10 and above, the square pad is GND.
