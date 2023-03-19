@@ -7,6 +7,7 @@
 #include "NES-MEP-Tools.h"
 #include "NES-MEP-WebPages.h"
 #include "NES-MEP-RecoveryWebPages.h"
+//#include "NES-MEP-MQTT.cpp"
 
 const char compile_date[] = __DATE__ " " __TIME__;
 
@@ -21,6 +22,15 @@ extern char wifi_password[];
 extern char user_login[];
 extern char user_password[];
 extern char mep_key[];
+
+extern boolean mqtt_enable;
+extern char mqtt_topic[];
+extern char mqtt_server[];
+extern char mqtt_user[];
+extern char mqtt_password[];
+extern int mqtt_connection_state;
+extern char mqtt_connection_state_text[];
+
 extern byte MEPQueueNextIndex;
 extern ConsumptionDataStruct ConsumptionData;
 extern MeterInfoStruct MeterInfo;
@@ -28,8 +38,9 @@ extern MeterInfoStruct MeterInfo;
 String GetESP32DateTime(boolean JsonFormat)
 {
   struct tm tm;
-  
-  getLocalTime(&tm);
+  const int maxWaitTime = 10;
+
+  getLocalTime(&tm, maxWaitTime);
   return DateTime2String(tm.tm_year-100,tm.tm_mon+1,tm.tm_mday,tm.tm_hour,tm.tm_min,tm.tm_sec,tm.tm_wday+1,JsonFormat);
 }
 
@@ -132,7 +143,7 @@ void HandleGetDashDataWS()
           ConsumptionData.BT28_Rev_W_L1,ConsumptionData.BT28_Rev_W_L2,ConsumptionData.BT28_Rev_W_L3,
           ConsumptionData.BT28_Fwd_Avg_W,ConsumptionData.BT28_Rev_Avg_W,
           ConsumptionData.BT28_Fwd_Avg_W_L1,ConsumptionData.BT28_Fwd_Avg_W_L2,ConsumptionData.BT28_Fwd_Avg_W_L3,
-          ConsumptionData.BT28_Rev_Avg_W_L1,ConsumptionData.BT28_Rev_Avg_W_L2,ConsumptionData.BT28_Rev_Avg_W_L3);
+          ConsumptionData.BT28_Rev_Avg_W_L1,ConsumptionData.BT28_Rev_Avg_W_L2,ConsumptionData.BT28_Rev_Avg_W_L3),
   MyWebServer.send(200, "application/json", pageBuffer);
   Serial.printf("Serving web request: GetDashDataWS with Fwd_Act_Wh=%lu and Rev_Act_Wh=%lu\r\n",ConsumptionData.BT23_Fwd_Act_Wh,ConsumptionData.BT23_Rev_Act_Wh);
 }
@@ -177,6 +188,12 @@ void HandleWebRequest(String URL, String Filename, String ContentType, boolean V
     pageBuffer.replace("###user_login###", user_login);
     pageBuffer.replace("###user_pwd###", user_password);
     pageBuffer.replace("###mep_key###", mep_key);
+    pageBuffer.replace("###mqtt_enable###", String(mqtt_enable));
+    pageBuffer.replace("###mqtt_connection_state_text###", mqtt_connection_state_text);
+    pageBuffer.replace("###mqtt_topic###", mqtt_topic);
+    pageBuffer.replace("###mqtt_server###", mqtt_server);
+    pageBuffer.replace("###mqtt_user###", mqtt_user);
+    pageBuffer.replace("###mqtt_password###", mqtt_password);
     pageBuffer.replace("###MaxMEPReplyLengthAsHex###", MaxMEPReplyLengthAsHex());
     MyWebServer.send(200, ContentType, pageBuffer);
     Serial.printf("File %s sent as response to %s\r\n", Filename.c_str(), URL.c_str());
@@ -226,8 +243,10 @@ boolean HandleLogin(String Login, String Password)
   Serial.printf("Password: '%s'\r\n",Password.c_str());
   return LoggedIn;
 }
-
-void StoreNewConfig(String ssid, String pwd, String userlogin, String userpwd, String mepkey)
+// MQTT TEST IMPLEMENTATION
+//void StoreNewConfig(String ssid, String pwd, String userlogin, String userpwd, String mepkey)
+void StoreNewConfig(String ssid, String pwd, String userlogin, String userpwd, String mepkey, boolean mqttenable, String mqtttopic, String mqttserver, String mqttuser, String mqttpassword)
+// MQTT TEST IMPLEMENTATION END
 {
   
   Serial.printf("Storing new config in preferences:\r\n");
@@ -240,7 +259,16 @@ void StoreNewConfig(String ssid, String pwd, String userlogin, String userpwd, S
   Serial.printf("User Password: %s\r\n",userpwd.c_str());
   preferences.putString("user_login",userlogin);
   preferences.putString("user_password",userpwd);
-
+  Serial.printf("Mqtt_enable %d\r\n",mqttenable);
+  Serial.printf("Mqtt server: %s\r\n",mqtttopic.c_str());
+  Serial.printf("Mqtt server: %s\r\n",mqttserver.c_str());
+  Serial.printf("Mqtt user: %s\r\n",mqttuser.c_str());
+  Serial.printf("Mqtt password: %s\r\n",mqttpassword.c_str());
+  preferences.putBool("mqtt_enable",mqttenable);
+  preferences.putString("mqtt_topic",mqtttopic);
+  preferences.putString("mqtt_server",mqttserver);
+  preferences.putString("mqtt_user",mqttuser);
+  preferences.putString("mqtt_password",mqttpassword);
   Serial.printf("MEP Key: %s\r\n",mepkey.c_str());
   preferences.putString("mep_key",mepkey);
 }
@@ -277,6 +305,10 @@ void SetupWebPages()
   });
 
   // Actions that does NOT require authorization
+  
+  MyWebServer.on("/infoMqtt",                HTTP_GET,  []() {
+    HandleWebRequest("/",           "/www_infoMqtt.html",  "text/html", false);
+  });
   MyWebServer.on("/Login",                     HTTP_GET, []() {
     if(HandleLogin(MyWebServer.arg("login"),MyWebServer.arg("pwd")))
       RedirectWebRequest("/");
@@ -299,7 +331,21 @@ void SetupWebPages()
   MyWebServer.on("/SavePreferencesAndRestart", HTTP_GET, []() {
     if(CheckLogin())
     {
-      StoreNewConfig(MyWebServer.arg("ssid"),MyWebServer.arg("pwd"),MyWebServer.arg("userlogin"),MyWebServer.arg("userpwd"),MyWebServer.arg("mepkey"));
+      bool mqttEnable=false;
+      mqttEnable = MyWebServer.arg("mqttenable") == "1"?true:false;
+      Serial.printf("SavePreferencesAndRestart, mqttenable_str=%s, mqttenable_bool=%d\r\n",MyWebServer.arg("mqttenable"),mqttEnable);
+
+      StoreNewConfig(MyWebServer.arg("ssid"),
+                      MyWebServer.arg("pwd"),
+                      MyWebServer.arg("userlogin"),
+                      MyWebServer.arg("userpwd"),
+                      MyWebServer.arg("mepkey"),
+                      mqttEnable,
+                      MyWebServer.arg("mqtttopic"),
+                      MyWebServer.arg("mqttserver"),
+                      MyWebServer.arg("mqttuser"),
+                      MyWebServer.arg("mqttpassword")
+                      );
       RedirectWebRequest("/");
       delay(5000);
       preferences.end();  

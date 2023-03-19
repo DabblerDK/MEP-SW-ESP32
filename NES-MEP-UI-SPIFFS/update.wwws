@@ -173,12 +173,12 @@
     ###FILE:/menu-include.html###
 	<table style="background-color:#FFF; margin-top: 0px;">
 	  <tr>
-	    <td colspan="2" height="80" align="center"><H1><center>Forward Active KWh for L1, L2 and L3<div id="SevenSeg_Fwd_Wh" style="height: 70px; width: fit-content;"></div></td>
-		<td colspan="2" height="80" align="center"><H1><center>Reverse Active KWh for L1, L2 and L3<div id="SevenSeg_Rev_Wh" style="height: 70px; width: fit-content;"></div></td>
+	    <td colspan="2" height="80" align="center"><H1><center>Forward Active kilowatt hours (kWh) for L1, L2 and L3<div id="SevenSeg_Fwd_Wh" style="height: 70px; width: fit-content;"></div></td>
+		<td colspan="2" height="80" align="center"><H1><center>Reverse Active kilowatt hours (kWh) for L1, L2 and L3<div id="SevenSeg_Rev_Wh" style="height: 70px; width: fit-content;"></div></td>
 	  </tr>
 	  <tr>
-		<td colspan="2" align="center" style="border-bottom-width: 0px;"><H1><center>Forward Watt</center></H1></td>
-		<td colspan="2" align="center" style="border-bottom-width: 0px;"><H1><center>Reverse Watt</center></H1></td>
+		<td colspan="2" align="center" style="border-bottom-width: 0px;"><H1><center>Forward milliwatt (mW)</center></H1></td>
+		<td colspan="2" align="center" style="border-bottom-width: 0px;"><H1><center>Reverse milliwatt (mW)</center></H1></td>
 	  </tr>
 	  <tr>
 	    <td height="200" align="center" style="border-top-width: 0px; border-right-width: 0px;"><div id="gauge_Fwd_TotalW" style="width: 200px; height: 180px;"></div></td>
@@ -187,11 +187,11 @@
 		<td height="200" align="center" style="border-top-width: 0px; border-left-width: 0px;"><div id="gauge_Rev_W" style="width: 600px; height: 180px;"></div></td>
 	  </tr>
 	  <tr>
-	    <td colspan="2" height="200" align="center"><H1><center>Forward RMS mili Amp.</center></H1><div id="gauge_RMS_A" style="width: 600px; height: 180px;"></div></td>
-	    <td colspan="2" height="200" align="center"><H1><center>Forward RMS mili Volt</center></H1><div id="gauge_RMS_V" style="width: 600px; height: 180px;"></div></td>
+	    <td colspan="2" height="200" align="center"><H1><center>RMS milliampere (mA)</center></H1><div id="gauge_RMS_A" style="width: 600px; height: 180px;"></div></td>
+	    <td colspan="2" height="200" align="center"><H1><center>RMS millivolt (mV)</center></H1><div id="gauge_RMS_V" style="width: 600px; height: 180px;"></div></td>
 	  </tr>
 	  <tr>
-	    <td colspan="2" height="200" align="center"><H1><center>Forward mili Hz</center></H1><div id="gauge_Freq_mHz" style="width: 200px; height: 180px;"></div></td>
+	    <td colspan="2" height="200" align="center"><H1><center>Millihertz (mHz)</center></H1><div id="gauge_Freq_mHz" style="width: 200px; height: 180px;"></div></td>
 	    <td colspan="2" height="200">&nbsp</td>
 	  </tr>
 	</table>
@@ -241,6 +241,67 @@
 		</center>
 	</body>
 </html>
+/www_infoMqtt.html
+<html>
+	<head>
+		<link rel="stylesheet" type="text/css" href="style.css">
+	</head>
+	<body>
+		###FILE:/menu-include.html###
+		<h2 style="text-align: center;">All information from the MEP, will be delivered on the following topic with the following content, all JSON formatted.</h2>
+		<table>
+			<tr>
+				<th>Topic</th>
+				<th>Information</th>
+				
+			</tr>
+			<tr>
+				<th>###mqtt_topic###/frequency/mydatajson</th>
+				<th>Grid frequency in mHz</th>
+			</tr>
+			<tr>
+				<th>###mqtt_topic###/meterConsumptionFwd/mydatajson</th>
+				<th>
+				Fwd_W: Total power consumption [W]<br>
+				Fwd_Avg_W: Total average power consumption for the past ? seconds [W]<br>
+				L[1,2,3]_Fwd_W: Power consumption on each phase [W]<br>
+				L[1,2,3]_Fwd_Avg_W: Average power consumption for the past ? seconds [W]
+				</th>
+			</tr>
+			<tr>
+				<th>###mqtt_topic###/meterConsumptionRev/mydatajson</th>
+				<th>
+				Rev_W: Total power production [W]<br>
+				Rev_Avg_W: Total average power production for the past ? seconds [W]<br>
+				L[1,2,3]_Rev_W: Power production on each phase [W]<br>
+				L[1,2,3]_Rev_Avg_W: Average power production for the past ? seconds [W]
+				</th>
+			</tr>
+			<tr>
+				<th>###mqtt_topic###/meterConsumptionTotal/mydatajson</th>
+				<th>
+				Fwd_Act_Wh: Last state of total energy consumption [Wh]<br>
+				Rev_Act_Wh: Last state of total energy production [Wh]
+				</th>
+			</tr>
+			<tr>
+				<th>###mqtt_topic###/sensors/mydatajson</th>
+				<th>
+				L[1,2,3]_RMS_A: Current in each phase [mA]<br>
+				L[1,2,3]_RMS_V: Voltage on each phase [mV]<br>
+				L[1,2,3]_PF_Fac: Power Factor on each phase [CosPhi]<br>
+				ExportReactive_VAr: Current export of VAr<br>
+				ImportReative_VAr: Current import of VAr
+				</th>
+			</tr>
+			<tr>
+				<th>###mqtt_topic###/lwt/</th>
+				<th>Last will topic, to give information if sensor has lost connection to MQTT broker</th>
+			</tr>
+		</table>
+	</body>
+</html>
+
 /www_loginIndex.html
 <html>
 	<head>
@@ -341,20 +402,33 @@
 			<input name=LoginSession type=hidden value=###LoginSession###>
 			<h1>ESP32-MEP Setup</h1>
 			WIFI SSID and password:<br>
-			<input name=ssid placeholder=SSID value="###wifi_ssid###">
-			<input name=pwd placeholder=Password type=Password value="###wifi_pwd###">
+			<input name=ssid maxlength="33" placeholder=SSID value="###wifi_ssid###">
+			<input name=pwd maxlength="65" placeholder=Password type=Password value="###wifi_pwd###">
 			<br>
 			User login and password:<br>
-			<input name=userlogin placeholder=Login value="###user_login###">
-			<input name=userpwd placeholder=Password type=Password value="###user_pwd###">
+			<input name=userlogin maxlength="33" placeholder=Login value="###user_login###">
+			<input name=userpwd maxlength="65" placeholder=Password type=Password value="###user_pwd###">
+
+			<br>
 			<br>
 			MEP key for power meter:<br>
 			<input name=mepkey placeholder="MEP Key as ASCII String (20 characters), no spaces" type=Password value="###mep_key###">
+			<br>
+			<h1>MQTT Setup</h1>
+			MQTT topic, server, user login and password:<br>
+			MQTT Connection state: ###mqtt_connection_state_text###<br>
+			<a href="/infoMqtt" target="_blank">MQTT information</a>
+			<input name=mqttenable value="###mqtt_enable###">1 for enable and 0 for disable
+			<input name=mqtttopic maxlength="25" placeholder=Topic value="###mqtt_topic###">
+			<input name=mqttserver maxlength="15" placeholder=ServerIP value="###mqtt_server###">
+			<input name=mqttuser maxlength="33" placeholder=Username value="###mqtt_user###">
+			<input name=mqttpassword maxlength="65" placeholder=Password type=Password value="###mqtt_password###">
 			<br>
 			<input type=submit value="Save and restart">
 		</form>
 	</body>
 </html>
+
 /www_sevenSeg.js
 // https://github.com/BrandonLWhite/sevenSeg.js/blob/gh-pages/sevenSeg.js
 

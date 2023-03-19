@@ -14,6 +14,20 @@
 #include "NES-MEP.h"
 #include "NES-MEP-RecoveryWebPages.h"
 #include "NES-MEP-WebPages.h"
+#include "NES-MEP-MQTT.cpp"
+#include <PubSubClient.h> 
+/*
+extern MeterInfoStruct MeterInfo;
+extern ConsumptionDataStruct ConsumptionData;
+*/
+
+void MqttConnect();
+void MqttReadSendSensorData();
+void MqttSetup();
+void SerialEvent2();
+
+WiFiClient espClient;
+PubSubClient mqttclient(espClient);
 
 Preferences preferences;
 IPAddress IP;
@@ -35,6 +49,19 @@ char wifi_password[65] = "";
 char user_login[33] = "";
 char user_password[65] = "";
 char mep_key[21] = "";
+
+const char* deviceId = "ESP32-MEP-Dabbler"; // CAN BE REMOVED
+bool mqtt_enable = false;
+char mqtt_topic[25];
+char mqtt_server[15];
+char mqtt_user[33];
+char mqtt_password[65];
+int mqtt_connection_state;
+String mqtt_connection_state_text = "";
+
+extern MeterInfoStruct MeterInfo;
+extern ConsumptionDataStruct ConsumptionData;
+
 const char* host = "esp32-mep";
 uint32_t previousMillis; 
 byte InputBuffer[MaxMEPReplyLength];
@@ -74,6 +101,11 @@ void setup(void) {
   preferences.getString("wifi_password","").toCharArray(wifi_password,sizeof(wifi_password));
   preferences.getString("user_login","mep").toCharArray(user_login,sizeof(user_login));
   preferences.getString("user_password","").toCharArray(user_password,sizeof(user_password));
+  mqtt_enable = preferences.getBool("mqtt_enable",false);
+  preferences.getString("mqtt_topic","").toCharArray(mqtt_topic,sizeof(mqtt_topic));
+  preferences.getString("mqtt_server","").toCharArray(mqtt_server,sizeof(mqtt_server));
+  preferences.getString("mqtt_user","").toCharArray(mqtt_user,sizeof(mqtt_user));
+  preferences.getString("mqtt_password","").toCharArray(mqtt_password,sizeof(mqtt_password));
   preferences.getString("mep_key","0000000000000000000000000000000000000000").toCharArray(mep_key,sizeof(mep_key));
 
   if(String(mep_key) == "") 
@@ -88,7 +120,9 @@ void setup(void) {
   // Connect to WiFi network
   Serial.printf("wifi_ssid: '%s'\r\nwifi_pwd: '%s'\r\n",wifi_ssid,wifi_password);
   Serial.printf("user_login: '%s'\r\nuser_pwd: '%s'\r\n",user_login,user_password);
-  Serial.printf("mep_key: '%s'",mep_key);
+  Serial.printf("mep_key: '%s'\r\n",mep_key);
+  Serial.printf("mqtt enable: %d\r\nmqttserver: %s\r\n", mqtt_enable,mqtt_server);
+  Serial.printf("mqttuser: %s\r\nmqttpw: %s\r\n", mqtt_user, mqtt_password);
 
   if(wifi_password == "") {
     WiFi.begin(wifi_ssid);
@@ -156,6 +190,10 @@ void setup(void) {
   else {
     queueRequest("300034",mep_key,MEPQueue,&MEPQueueNextIndex,None); // BT52: UTC Clock
   }
+
+  if(mqtt_enable) {
+    MqttSetup();
+  }
 }
 
 void SerialEvent2() {
@@ -182,7 +220,47 @@ void loop(void) {
     delay(30000);
     Serial.println("");
   }
-   
+
+  if(mqtt_enable) {
+    static unsigned long LastMQTTSentMillis = 0;
+    mqttclient.loop();
+    if(millis() - LastMQTTSentMillis > 10000) {
+      mqtt_connection_state = mqttclient.state(); // getting connection state every 10 seconds
+      //make MQTT status readable
+      if (mqtt_connection_state == 0) {
+        mqtt_connection_state_text = "Connected";
+      } else if (mqtt_connection_state == 1)  {
+        mqtt_connection_state_text = "Wrong MQTT protocol version";
+      } else if (mqtt_connection_state == 2)  {
+        mqtt_connection_state_text = "Bad client ID";
+      } else if (mqtt_connection_state == 3)  {
+        mqtt_connection_state_text = "Server cant accept connection";
+      } else if (mqtt_connection_state == 4)  {
+        mqtt_connection_state_text = "User/pass rejected";
+      } else if (mqtt_connection_state == 5)  {
+        mqtt_connection_state_text = "Not authed";
+      } else if (mqtt_connection_state == -4)  {
+        mqtt_connection_state_text = "Server not responding";
+      } else if (mqtt_connection_state == -3)  {
+        mqtt_connection_state_text = "Connection broken";
+      } else if (mqtt_connection_state == -2)  {
+        mqtt_connection_state_text = "Network failed";
+      } else if (mqtt_connection_state == -1)  {
+        mqtt_connection_state_text = "Disconnected cleanly";
+      } else {
+        mqtt_connection_state_text = "Hakuna?";
+      }
+
+      if (!mqttclient.connected()) { // if disconnected
+        MqttConnect(); // reconnect
+        delay(500);
+      } else {
+        MqttReadSendSensorData();
+        LastMQTTSentMillis=millis();
+      }
+    }
+  }
+
   // Run web server
   MyWebServer.handleClient();
 
@@ -195,6 +273,7 @@ void loop(void) {
     LastSentMillis = millis();
   }
   if(SentAwaitingReply) {
+
     if(millis() - LastSentMillis > 10000) {
       MEPEnable(false);
       RS3232Enable(false);
@@ -324,4 +403,150 @@ void loop(void) {
       }
     }
   }
+}
+
+void MqttSetup() {
+  mqttclient.setServer(mqtt_server, 1883);
+  MqttConnect();
+
+}
+
+void MqttConnect() {
+  if (!mqttclient.connected()) {
+    bool mqttConnectResult=false;
+    Serial.print("Reconnecting to MQTT broker... ");
+    Serial.printf("mqtt_user: '%s'\r\n",mqtt_user);
+    String localMqttUser = String(mqtt_user);
+    localMqttUser.trim(); //remove spaces
+    
+    char will_topic[100];
+    sprintf(will_topic, "%s/lwt", mqtt_topic);
+    if (localMqttUser.isEmpty())
+    {
+      Serial.printf("mqtt connect without credentials\r\n");
+      mqttConnectResult = mqttclient.connect(deviceId, NULL, NULL, will_topic, 0, true, "Offline");
+    }
+    else
+    {
+      Serial.printf("mqtt connect with credentials\r\n");
+      mqttConnectResult = mqttclient.connect(deviceId, mqtt_user, mqtt_password, will_topic, 0, true, "Offline");
+    }
+
+    if (mqttConnectResult) {
+      Serial.println("connected............ OK!"); //debug code can be removed?
+      mqttclient.publish(will_topic, "Online", true);
+    } else {
+      Serial.print("failed, rc=");
+      Serial.print(mqttclient.state());
+      Serial.print(mqtt_connection_state_text);
+      Serial.println(" trying again in next loop");
+    }
+    
+  }
+}
+
+void MqttReadSendSensorData() {
+  
+  char mqtt_topic_data[100];
+  char mqtt_payload_data[300];
+
+  Serial.printf("Is connected to mqtt: %d\r\n", mqttclient.connected());
+
+  sprintf(mqtt_topic_data, "%s/sensors/mydatajson", mqtt_topic); //CREATE TOPIC FOR CURRENT DEVICENAME (Can use another variable than deviceId, thats already in use in program)
+  sprintf(mqtt_payload_data, "{\
+\"L1_RMS_A\":%lu,\"L2_RMS_A\":%lu,\"L3_RMS_A\":%lu,\
+\"L1_RMS_V\":%lu,\"L2_RMS_V\":%lu,\"L3_RMS_V\":%lu,\
+\"L1_PF_Fac\":%lu,\"L2_PF_Fac\":%lu,\"L3_PF_Fac\":%lu,\
+\"ExportReactive_VAr\":%lu,\"ImportReactive_VAr\":%lu\
+}",\
+      ConsumptionData.BT28_RMS_mA_L1, ConsumptionData.BT28_RMS_mA_L2, ConsumptionData.BT28_RMS_mA_L3,
+      ConsumptionData.BT28_RMS_mV_L1, ConsumptionData.BT28_RMS_mV_L2, ConsumptionData.BT28_RMS_mV_L3,
+      ConsumptionData.BT28_PowerFactor_Fac_L1, ConsumptionData.BT28_PowerFactor_Fac_L2, ConsumptionData.BT28_PowerFactor_Fac_L3,
+      ConsumptionData.BT28_ExportReactive_VAr, ConsumptionData.BT28_ImportReactive_VAr
+  );
+
+  Serial.printf("Is connected to mqtt: %d\r\n", mqttclient.connected());
+  Serial.printf("mqtt data \r\ntopic: %s\r\npayload: %s\r\n", mqtt_topic_data, mqtt_payload_data);
+
+  if (mqttclient.publish(mqtt_topic_data, mqtt_payload_data)) {
+    Serial.printf("Sent OK\r\n");
+  }
+  else {
+        Serial.printf("Sent NOK\r\n");
+  }
+
+  sprintf(mqtt_topic_data, "%s/meterConsumptionTotal/mydatajson", mqtt_topic); //CREATE TOPIC FOR CURRENT DEVICENAME (Can use another variable than deviceId, thats already in use in program)
+  sprintf(mqtt_payload_data, "{\
+\"Fwd_Act_Wh\":%lu,\"Rev_Act_Wh\":%lu\
+}",\
+      ConsumptionData.BT23_Fwd_Act_Wh, ConsumptionData.BT23_Rev_Act_Wh
+  );
+
+  Serial.printf("mqtt data \r\ntopic: %s\r\npayload: %s\r\n", mqtt_topic_data, mqtt_payload_data);
+  if (mqttclient.publish(mqtt_topic_data, mqtt_payload_data)) {
+    Serial.printf("Sent OK\r\n");
+  }
+  else {
+        Serial.printf("Sent NOK\r\n");
+  }
+
+  sprintf(mqtt_topic_data, "%s/meterConsumptionFwd/mydatajson", mqtt_topic); //CREATE TOPIC FOR CURRENT DEVICENAME (Can use another variable than deviceId, thats already in use in program)
+  sprintf(mqtt_payload_data, "{\
+\"Fwd_W\":%lu,\
+\"Fwd_Avg_W\":%lu,\
+\"L1_Fwd_W\":%lu,\"L2_Fwd_W\":%lu,\"L3_Fwd_W\":%lu,\
+\"L1_Fwd_Avg_W\":%lu,\"L2_Fwd_Avg_W\":%lu,\"L3_Fwd_Avg_W\":%lu\
+}",\
+  ConsumptionData.BT28_Fwd_W,
+  ConsumptionData.BT28_Fwd_Avg_W,
+  ConsumptionData.BT28_Fwd_W_L1, ConsumptionData.BT28_Fwd_W_L2, ConsumptionData.BT28_Fwd_W_L3,
+  ConsumptionData.BT28_Fwd_Avg_W_L1, ConsumptionData.BT28_Fwd_Avg_W_L2, ConsumptionData.BT28_Fwd_Avg_W_L3
+  );
+
+  Serial.printf("mqtt data \r\ntopic: %s\r\npayload: %s\r\n", mqtt_topic_data, mqtt_payload_data);
+  if (mqttclient.publish(mqtt_topic_data, mqtt_payload_data)) {
+    Serial.printf("Sent OK\r\n");
+  }
+  else {
+        Serial.printf("Sent NOK\r\n");
+  }
+
+  sprintf(mqtt_topic_data, "%s/meterConsumptionRev/mydatajson", mqtt_topic); //CREATE TOPIC FOR CURRENT DEVICENAME (Can use another variable than deviceId, thats already in use in program)
+  sprintf(mqtt_payload_data, "{\
+\"Rev_W\":%lu,\
+\"Rev_Avg_W\":%lu,\
+\"L1_Rev_W\":%lu,\"L2_Rev_W\":%lu,\"L3_Rev_W\":%lu,\
+\"L1_Rev_Avg_W\":%lu,\"L2_Rev_Avg_W\":%lu,\"L3_Rev_Avg_W\":%lu\
+}",\
+  ConsumptionData.BT28_Rev_W,
+  ConsumptionData.BT28_Rev_Avg_W,
+  ConsumptionData.BT28_Rev_W_L1, ConsumptionData.BT28_Rev_W_L2, ConsumptionData.BT28_Rev_W_L3,
+  ConsumptionData.BT28_Rev_Avg_W_L1, ConsumptionData.BT28_Rev_Avg_W_L2, ConsumptionData.BT28_Rev_Avg_W_L3
+  );
+
+  Serial.printf("mqtt data \r\ntopic: %s\r\npayload: %s\r\n", mqtt_topic_data, mqtt_payload_data);
+  if (mqttclient.publish(mqtt_topic_data, mqtt_payload_data)) {
+    Serial.printf("Sent OK\r\n");
+  }
+  else {
+        Serial.printf("Sent NOK\r\n");
+  }
+
+
+  sprintf(mqtt_topic_data, "%s/frequency/mydatajson", mqtt_topic); //CREATE TOPIC FOR CURRENT DEVICENAME (Can use another variable than deviceId, thats already in use in program)
+  sprintf(mqtt_payload_data, "{\
+\"Freq_mHz\":%lu\
+}",\
+     ConsumptionData.BT28_Freq_mHz
+  );
+
+  Serial.printf("mqtt data \r\ntopic: %s\r\npayload: %s\r\n", mqtt_topic_data, mqtt_payload_data);
+  if (mqttclient.publish(mqtt_topic_data, mqtt_payload_data)) {
+    Serial.printf("Sent OK\r\n");
+  }
+  else {
+        Serial.printf("Sent NOK\r\n");
+  }
+
+
 }

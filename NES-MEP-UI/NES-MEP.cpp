@@ -610,6 +610,11 @@ String ReplyData2String(MEPQueueStruct *MEPQueue,byte MEPQueueReplyIndex, boolea
                        ConsumptionData.BT28_Rev_Avg_W_L1 = AverageRevActiveWL1;
                        ConsumptionData.BT28_Rev_Avg_W_L2 = AverageRevActiveWL2;
                        ConsumptionData.BT28_Rev_Avg_W_L3 = AverageRevActiveWL3;
+                       ConsumptionData.BT28_PowerFactor_Fac_L1 = PowerFactorL1;
+                       ConsumptionData.BT28_PowerFactor_Fac_L2 = PowerFactorL2;
+                       ConsumptionData.BT28_PowerFactor_Fac_L3 = PowerFactorL3;
+                       ConsumptionData.BT28_ExportReactive_VAr = ExportReactiveVArL1L2L3;
+                       ConsumptionData.BT28_ImportReactive_VAr = ImportReactiveVArL1L2L3;
                      }  
                      return "Fwd Active W L1L2L3: " + String(FwdActiveWL1L2L3) + "<br>" +
                             "Rev Active W L1L2L3: " + String(RevActiveWL1L2L3) + "<br>" +
