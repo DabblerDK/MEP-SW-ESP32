@@ -4,8 +4,23 @@
 #include <sys/time.h>
 #include <time.h>
 
-#define METER_ENABLE_PIN   5 // GPIO  5 / pin 29
-#define RS3232_ENABLE_PIN 32 // GPIO 32 / pin 8
+// Define correct serial ports for CPU
+// ***ESP32***
+//#define MEP_ESP32
+//typedef Serial DebugSerialType;
+
+// ***ESP32C3***
+#include <SoftwareSerial.h> // EspSortwre Serial by Dirk Kaar, Peter Lerup, version 8.0.1
+#define MEP_ESP32C3
+#define RXD1_PIN             6
+#define TXD1_PIN             7
+typedef EspSoftwareSerial::UART DebugSerialType;
+
+#define FAIL_SAFE_PIN        2 // GPIO  2 / ESP32 pin 24 / ESP32C3 n/a
+#define DISABLE_AP_MODE_PIN  4 // GPIO  4 / ESP32 pin 26 / ESP32C3 n/a
+#define METER_ENABLE_PIN     5 // GPIO  5 / ESP32 pin 29 / ESP32C3 pin 19
+#define CLEAR_CONFIG_PIN    12 // GPIO 12 / ESP32 pin 14 / ESP32C3 n/a
+#define RS3232_ENABLE_PIN   32 // GPIO 32 / ESP32 pin 8  / ESP32C3 n/a
 
 #define MaxMEPRequestLength 512
 #define MaxMEPReplyLength   512

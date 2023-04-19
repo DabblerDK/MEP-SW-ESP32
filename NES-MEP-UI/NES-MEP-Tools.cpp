@@ -1,4 +1,7 @@
+#include "NES-MEP.h"
 #include "NES-MEP-Tools.h"
+
+extern DebugSerialType DebugSerial;
 
 String UnsignedLong2String(unsigned long Input, boolean HideZero)
 {
@@ -10,14 +13,14 @@ String UnsignedLong2String(unsigned long Input, boolean HideZero)
 
 void dumpByteArray(const byte *byteArray, const unsigned long arraySize)
 {
-  Serial.print("0x");
+  DebugSerial.print("0x");
   for(unsigned long i = 0; i < arraySize; i++)
   {
     if (byteArray[i] < 0x10)
-      Serial.print("0");
-    Serial.print(byteArray[i], HEX);
+      DebugSerial.print("0");
+    DebugSerial.print(byteArray[i], HEX);
   }
-  Serial.println();
+  DebugSerial.println();
 }
 
 String ASCIIString2HexString(String ASCII)
