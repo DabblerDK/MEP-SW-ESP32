@@ -6,15 +6,15 @@
 
 // Define correct serial ports for CPU
 // ***ESP32***
-//#define MEP_ESP32
-//typedef Serial DebugSerialType;
+#define MEP_ESP32
+typedef HardwareSerial DebugSerialType;
 
 // ***ESP32C3***
-#include <SoftwareSerial.h> // EspSortwre Serial by Dirk Kaar, Peter Lerup, version 8.0.1
-#define MEP_ESP32C3
-#define RXD1_PIN             6
-#define TXD1_PIN             7
-typedef EspSoftwareSerial::UART DebugSerialType;
+//#include <SoftwareSerial.h> // EspSortwre Serial by Dirk Kaar, Peter Lerup, version 8.0.1
+//#define MEP_ESP32C3
+//#define RXD1_PIN             6
+//#define TXD1_PIN             7
+//typedef EspSoftwareSerial::UART DebugSerialType;
 
 #define FAIL_SAFE_PIN        2 // GPIO  2 / ESP32 pin 24 / ESP32C3 n/a
 #define DISABLE_AP_MODE_PIN  4 // GPIO  4 / ESP32 pin 26 / ESP32C3 n/a
