@@ -4,23 +4,25 @@
 #include <sys/time.h>
 #include <time.h>
 
-// Define correct serial ports for CPU
-// ***ESP32***
-#define MEP_ESP32
-typedef HardwareSerial DebugSerialType;
+#ifdef ARDUINO_ESP32_DEV // ESP32-WROOM-32 based MEP module from www.dabbler.dk
+  #define FAIL_SAFE_PIN        2 // GPIO  2 / ESP32 pin 24
+  #define DISABLE_AP_MODE_PIN  4 // GPIO  4 / ESP32 pin 26
+  #define METER_ENABLE_PIN     5 // GPIO  5 / ESP32 pin 29
+  #define CLEAR_CONFIG_PIN    12 // GPIO 12 / ESP32 pin 14
+  #define RS3232_ENABLE_PIN   32 // GPIO 32 / ESP32 pin 8 
 
-// ***ESP32C3***
-//#include <SoftwareSerial.h> // EspSortwre Serial by Dirk Kaar, Peter Lerup, version 8.0.1
-//#define MEP_ESP32C3
-//#define RXD1_PIN             6
-//#define TXD1_PIN             7
-//typedef EspSoftwareSerial::UART DebugSerialType;
+  typedef HardwareSerial DebugSerialType;
+#endif
 
-#define FAIL_SAFE_PIN        2 // GPIO  2 / ESP32 pin 24 / ESP32C3 n/a
-#define DISABLE_AP_MODE_PIN  4 // GPIO  4 / ESP32 pin 26 / ESP32C3 n/a
-#define METER_ENABLE_PIN     5 // GPIO  5 / ESP32 pin 29 / ESP32C3 pin 19
-#define CLEAR_CONFIG_PIN    12 // GPIO 12 / ESP32 pin 14 / ESP32C3 n/a
-#define RS3232_ENABLE_PIN   32 // GPIO 32 / ESP32 pin 8  / ESP32C3 n/a
+#ifdef ARDUINO_ESP32C3_DEV // ESP32C3 based MEP module from www.uStepper.com
+  #include <SoftwareSerial.h> // EspSortwre Serial by Dirk Kaar, Peter Lerup, version 8.0.1
+
+  #define METER_ENABLE_PIN     5 // GPIO  5 / ESP32C3 pin 19
+  #define RXD1_PIN             6 // GPIO  6 / ESP32C3 pin ? (not really used for anything right now)
+  #define TXD1_PIN             7 // GPIO  7 / ESP32C3 pin ? (not really used for anything right now)
+
+  typedef EspSoftwareSerial::UART DebugSerialType;
+#endif
 
 #define MaxMEPRequestLength 512
 #define MaxMEPReplyLength   512

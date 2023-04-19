@@ -67,12 +67,12 @@ uint32_t previousMillis;
 byte InputBuffer[MaxMEPReplyLength];
 unsigned long InputBufferLength = 0;
 
-#ifdef MEP_ESP32
-    auto& DebugSerial = Serial;
-    auto& MEPSerial = Serial2;
+#ifdef ARDUINO_ESP32_DEV
+  auto& DebugSerial = Serial;
+  auto& MEPSerial = Serial2;
 #endif
 
-#ifdef MEP_ESP32C3
+#ifdef ARDUINO_ESP32C3_DEV
   EspSoftwareSerial::UART DebugSerial;
   auto& MEPSerial = Serial;    
 #endif
@@ -101,9 +101,17 @@ void setup(void) {
 
   MEPSerial.begin(9600);
 
-  pinMode(FAIL_SAFE_PIN, INPUT_PULLDOWN);
-  pinMode(DISABLE_AP_MODE_PIN, INPUT_PULLDOWN);
-  pinMode(CLEAR_CONFIG_PIN, INPUT_PULLDOWN);
+  #ifdef FAIL_SAFE_PIN 
+    pinMode(FAIL_SAFE_PIN, INPUT_PULLDOWN);
+  #endif
+
+  #ifdef DISABLE_AP_MODE_PIN 
+    pinMode(DISABLE_AP_MODE_PIN, INPUT_PULLDOWN);
+  #endif
+
+  #ifdef CLEAR_CONFIG_PIN   
+    pinMode(CLEAR_CONFIG_PIN, INPUT_PULLDOWN);
+  #endif
 
   randomSeed(analogRead(0)); // Should be before WiFI to prevent "__analogRead(): GPIO0: ESP_ERR_TIMEOUT: ADC2 is in use by Wi-Fi."
 

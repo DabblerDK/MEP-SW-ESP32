@@ -979,16 +979,18 @@ void MEPEnable(boolean State)
 
 void RS3232Enable(boolean State)
 {
-  DebugSerial.printf("Setting RS3232 pin %i\r\n",State);
-  pinMode(RS3232_ENABLE_PIN, OUTPUT);
-  if(State)
-  {
-    digitalWrite(RS3232_ENABLE_PIN,HIGH);
-  }
-  else
-  {
-    digitalWrite(RS3232_ENABLE_PIN,LOW);
-  }  
+  #ifdef RS3232_ENABLE_PIN
+    DebugSerial.printf("Setting RS3232 pin %i\r\n",State);
+    pinMode(RS3232_ENABLE_PIN, OUTPUT);
+    if(State)
+    {
+      digitalWrite(RS3232_ENABLE_PIN,HIGH);
+    }
+    else
+    {
+      digitalWrite(RS3232_ENABLE_PIN,LOW);
+    }  
+  #endif
 }
 
 
