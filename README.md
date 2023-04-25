@@ -7,12 +7,11 @@ This is the repository holding the Software for OSGP Smart Meters (i.e. Echelon 
 - see https://www.dabbler.dk for further information about this software project
 
 Note:
-- The software has been developed and compiled using Arduino IDE (we have tested v. 1.8.13 and 2.0.0, but will probably also work on other/later versions
-- We have added this URL as "Additional Board Manager URLs" (the File/Properties menu): https://dl.espressif.com/dl/package_esp32_index.json
-- During development we are using the "DOIT ESP32 DEVKIT V1" board from the "esp32 by Espressif Systems v. 1.0.6" package
+- The software has been developed and compiled using Arduino IDE (we have tested v. 2.1.0, but will probably also work on other/later versions
+- We have added this URL as "Additional Board Manager URLs" (the File/Properties menu): https://espressif.github.io/arduino-esp32/package_esp32_index.json
+- During development we are using the "ESP32 Dev Module" board
 - The software have a dependency on PubSubClient by Nick O'Leary <nick.oleary@gmail.com> for MQTT (we have been testing with version 2.8.0 of the library, but will expect it to work with any future versions as well)
 - MQTT implementation does NOT support Home Assistent Autodiscovery as of now.
-- The previous dependency on "SimpleFTPServer by Renzo Mischianti v. 2.1.2" has been removed as we only needed it to debug the SPIFFS wwws upload etc.
 - You need to obtain the MEP key (MBK key) yourself via your power company (where you buy yor power). It is a 20 ASCII character key (it might look like it is HEX, but it is NOT - so please do not try to convert it!). We actually only need the first 16 ASCII characters, but if you enter the full key the software will handle it correctly.
 - The Dashboard page should always work without login/password, but for the rest of the pages you need to supply the login/password you chose on the configuration page (the module also accept your wifi name and password as a fail safe).
 
