@@ -188,7 +188,7 @@ void setup(void) {
     Serial.println("No MEP key set, disabling MEP communication until next reboot...");
   }
   else {
-    queueRequest("300034",mep_key,MEPQueue,&MEPQueueNextIndex,None); // BT52: UTC Clock
+    queueRequest("300034" + MaxMEPReplyLengthAsHex(),mep_key,MEPQueue,&MEPQueueNextIndex,None); // BT52: UTC Clock
   }
 
   if(mqtt_enable) {
@@ -264,8 +264,6 @@ void loop(void) {
   // Run web server
   MyWebServer.handleClient();
 
-// TO-DO: Hvad hvis vi aldrig får svar?
-
   // Receiving packages from meter
 
   // Timeout waiting for answer from meter
@@ -336,12 +334,12 @@ void loop(void) {
             if(FirstRequestOk)
             {
               // Read the meter configs we need to decode other requests
-              queueRequest("300001",mep_key,MEPQueue,&MEPQueueNextIndex,None); // BT01: General Manufacturer Information
-              queueRequest("300015",mep_key,MEPQueue,&MEPQueueNextIndex,None); // BT21: Actual Register
-              queueRequest("300803",mep_key,MEPQueue,&MEPQueueNextIndex,None); // ET03: Utility Information
-              queueRequest("30080B",mep_key,MEPQueue,&MEPQueueNextIndex,None); // ET11: MFG Dimension Table
-              queueRequest("30080D",mep_key,MEPQueue,&MEPQueueNextIndex,None); // ET13: MEP/M-Bus Device Configuration
-              queueRequest("300832",mep_key,MEPQueue,&MEPQueueNextIndex,None); // ET50: MEP Inbound Data Space
+              queueRequest("300001" + MaxMEPReplyLengthAsHex(),mep_key,MEPQueue,&MEPQueueNextIndex,None); // BT01: General Manufacturer Information
+              queueRequest("300015" + MaxMEPReplyLengthAsHex(),mep_key,MEPQueue,&MEPQueueNextIndex,None); // BT21: Actual Register
+              queueRequest("300803" + MaxMEPReplyLengthAsHex(),mep_key,MEPQueue,&MEPQueueNextIndex,None); // ET03: Utility Information
+              queueRequest("30080B" + MaxMEPReplyLengthAsHex(),mep_key,MEPQueue,&MEPQueueNextIndex,None); // ET11: MFG Dimension Table
+              queueRequest("30080D" + MaxMEPReplyLengthAsHex(),mep_key,MEPQueue,&MEPQueueNextIndex,None); // ET13: MEP/M-Bus Device Configuration
+              queueRequest("300832" + MaxMEPReplyLengthAsHex(),mep_key,MEPQueue,&MEPQueueNextIndex,None); // ET50: MEP Inbound Data Space
               GetConfigurationRequestsSent = true;
             }
           }

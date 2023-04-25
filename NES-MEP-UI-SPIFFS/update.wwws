@@ -177,8 +177,8 @@
 		<td colspan="2" height="80" align="center"><H1><center>Reverse Active kilowatt hours (kWh) for L1, L2 and L3<div id="SevenSeg_Rev_Wh" style="height: 70px; width: fit-content;"></div></td>
 	  </tr>
 	  <tr>
-		<td colspan="2" align="center" style="border-bottom-width: 0px;"><H1><center>Forward milliwatt (mW)</center></H1></td>
-		<td colspan="2" align="center" style="border-bottom-width: 0px;"><H1><center>Reverse milliwatt (mW)</center></H1></td>
+		<td colspan="2" align="center" style="border-bottom-width: 0px;"><H1><center>Forward watt (W)</center></H1></td>
+		<td colspan="2" align="center" style="border-bottom-width: 0px;"><H1><center>Reverse watt (W)</center></H1></td>
 	  </tr>
 	  <tr>
 	    <td height="200" align="center" style="border-top-width: 0px; border-right-width: 0px;"><div id="gauge_Fwd_TotalW" style="width: 200px; height: 180px;"></div></td>
@@ -248,55 +248,54 @@
 	</head>
 	<body>
 		###FILE:/menu-include.html###
-		<h2 style="text-align: center;">All information from the MEP, will be delivered on the following topic with the following content, all JSON formatted.</h2>
+		<h2 style="text-align: center;"><font color="white">All information from the MEP, will be delivered on the following topic with the following content, all JSON formatted.</font></h2>
 		<table>
 			<tr>
 				<th>Topic</th>
 				<th>Information</th>
-				
 			</tr>
 			<tr>
-				<th>###mqtt_topic###/frequency/mydatajson</th>
-				<th>Grid frequency in mHz</th>
+				<td>###mqtt_topic###/frequency/mydatajson</td>
+				<td>Grid frequency in mHz</td>
 			</tr>
 			<tr>
-				<th>###mqtt_topic###/meterConsumptionFwd/mydatajson</th>
-				<th>
+				<td>###mqtt_topic###/meterConsumptionFwd/mydatajson</td>
+				<td>
 				Fwd_W: Total power consumption [W]<br>
 				Fwd_Avg_W: Total average power consumption for the past ? seconds [W]<br>
 				L[1,2,3]_Fwd_W: Power consumption on each phase [W]<br>
 				L[1,2,3]_Fwd_Avg_W: Average power consumption for the past ? seconds [W]
-				</th>
+				</td>
 			</tr>
 			<tr>
-				<th>###mqtt_topic###/meterConsumptionRev/mydatajson</th>
-				<th>
+				<td>###mqtt_topic###/meterConsumptionRev/mydatajson</td>
+				<td>
 				Rev_W: Total power production [W]<br>
 				Rev_Avg_W: Total average power production for the past ? seconds [W]<br>
 				L[1,2,3]_Rev_W: Power production on each phase [W]<br>
 				L[1,2,3]_Rev_Avg_W: Average power production for the past ? seconds [W]
-				</th>
+				</td>
 			</tr>
 			<tr>
-				<th>###mqtt_topic###/meterConsumptionTotal/mydatajson</th>
-				<th>
+				<td>###mqtt_topic###/meterConsumptionTotal/mydatajson</td>
+				<td>
 				Fwd_Act_Wh: Last state of total energy consumption [Wh]<br>
 				Rev_Act_Wh: Last state of total energy production [Wh]
-				</th>
+				</td>
 			</tr>
 			<tr>
-				<th>###mqtt_topic###/sensors/mydatajson</th>
-				<th>
+				<td>###mqtt_topic###/sensors/mydatajson</td>
+				<td>
 				L[1,2,3]_RMS_A: Current in each phase [mA]<br>
 				L[1,2,3]_RMS_V: Voltage on each phase [mV]<br>
 				L[1,2,3]_PF_Fac: Power Factor on each phase [CosPhi]<br>
 				ExportReactive_VAr: Current export of VAr<br>
 				ImportReative_VAr: Current import of VAr
-				</th>
+				</td>
 			</tr>
 			<tr>
-				<th>###mqtt_topic###/lwt/</th>
-				<th>Last will topic, to give information if sensor has lost connection to MQTT broker</th>
+				<td>###mqtt_topic###/lwt/</td>
+				<td>Last will topic, to give information if sensor has lost connection to MQTT broker</td>
 			</tr>
 		</table>
 	</body>
@@ -417,7 +416,7 @@
 			<h1>MQTT Setup</h1>
 			MQTT topic, server, user login and password:<br>
 			MQTT Connection state: ###mqtt_connection_state_text###<br>
-			<a href="/infoMqtt" target="_blank">MQTT information</a>
+			<a href="/infoMqtt?LoginSession=###LoginSession###" target="_blank">MQTT information</a>
 			<input name=mqttenable value="###mqtt_enable###">1 for enable and 0 for disable
 			<input name=mqtttopic maxlength="25" placeholder=Topic value="###mqtt_topic###">
 			<input name=mqttserver maxlength="15" placeholder=ServerIP value="###mqtt_server###">
