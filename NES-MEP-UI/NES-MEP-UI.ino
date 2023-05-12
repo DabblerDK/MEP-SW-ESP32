@@ -67,14 +67,9 @@ uint32_t previousMillis;
 byte InputBuffer[MaxMEPReplyLength];
 unsigned long InputBufferLength = 0;
 
-#ifdef ARDUINO_ESP32_DEV
-  auto& DebugSerial = Serial;
-  auto& MEPSerial = Serial2;
-#endif
-
 #ifdef ARDUINO_ESP32C3_DEV
-  EspSoftwareSerial::UART DebugSerial;
-  auto& MEPSerial = Serial;    
+  // uStepper Rev1.0
+  EspSoftwareSerial::UART Serial2;
 #endif
 
 bool PreferencesOk(void) {
@@ -91,15 +86,18 @@ void InitializePreferences(void) {
 
 /* setup function */
 void setup(void) {
-  #ifdef MEP_ESP32
-    DebugSerial.begin(115200);
+  Serial.begin(115200);
+  while(!Serial) {
+    delay(100);
+  }
+  
+  #ifdef ARDUINO_ESP32_DEV
+    Serial2.begin(9600);  
   #endif
 
-  #ifdef MEP_ESP32C3
-    DebugSerial.begin(115200, SWSERIAL_8N1, RXD1_PIN, TXD1_PIN, false);
+  #ifdef ARDUINO_ESP32C3_DEV
+    Serial2.begin(9600, SWSERIAL_8N1, RXD1_PIN, TXD1_PIN);
   #endif
-
-  MEPSerial.begin(9600);
 
   #ifdef FAIL_SAFE_PIN 
     pinMode(FAIL_SAFE_PIN, INPUT_PULLDOWN);
@@ -118,11 +116,11 @@ void setup(void) {
   // Preferences
   preferences.begin(host, false); 
   if(PreferencesOk()) {
-    DebugSerial.println("Preferences are valid");   
+    Serial.println("Preferences are valid");   
   }
   else {
     InitializePreferences();
-    DebugSerial.println("Preferences initialized");
+    Serial.println("Preferences initialized");
   }
 
   // Get preferences
@@ -147,11 +145,11 @@ void setup(void) {
   }
 
   // Connect to WiFi network
-  DebugSerial.printf("wifi_ssid: '%s'\r\nwifi_pwd: '%s'\r\n",wifi_ssid,wifi_password);
-  DebugSerial.printf("user_login: '%s'\r\nuser_pwd: '%s'\r\n",user_login,user_password);
-  DebugSerial.printf("mep_key: '%s'\r\n",mep_key);
-  DebugSerial.printf("mqtt enable: %d\r\nmqttserver: %s\r\n", mqtt_enable,mqtt_server);
-  DebugSerial.printf("mqttuser: %s\r\nmqttpw: %s\r\n", mqtt_user, mqtt_password);
+  Serial.printf("wifi_ssid: '%s'\r\nwifi_pwd: '%s'\r\n",wifi_ssid,wifi_password);
+  Serial.printf("user_login: '%s'\r\nuser_pwd: '%s'\r\n",user_login,user_password);
+  Serial.printf("mep_key: '%s'\r\n",mep_key);
+  Serial.printf("mqtt_enable: %d\r\nmqtt_server: %s\r\n", mqtt_enable,mqtt_server);
+  Serial.printf("mqtt_user: %s\r\nmqtt_pw: %s\r\n", mqtt_user, mqtt_password);
 
   if(wifi_password == "") {
     WiFi.begin(wifi_ssid);
@@ -159,22 +157,22 @@ void setup(void) {
   else {
     WiFi.begin(wifi_ssid,wifi_password);
   } 
-  DebugSerial.println("");
-
+  Serial.println("");
+  
   // Wait for connection
   previousMillis = millis();
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
-    DebugSerial.print(".");
+    Serial.print(".");
     
     if((millis()-previousMillis > 30000) || String(wifi_ssid) == "") {
-      DebugSerial.print("Setting up AP (Access Point) ");
-      DebugSerial.println(host);
+      Serial.print("Setting up AP (Access Point) ");
+      Serial.println(host);
       WiFi.softAP(host, "12345678"); // TO-DO: Brug host + måler SN som SSID og måler SN som password
 
       IP = WiFi.softAPIP();
-      DebugSerial.print("AP IP address: ");
-      DebugSerial.println(IP);
+      Serial.print("AP IP address: ");
+      Serial.println(IP);
       UserLoginSession = SecretLoginSession; // We are always authenticated in AP mode
       APMode = true;
       break;
@@ -184,21 +182,20 @@ void setup(void) {
   if(WiFi.status() == WL_CONNECTED)
   {
     IP = WiFi.localIP();
-    DebugSerial.println("");
-    DebugSerial.print("Connected to ");
-    DebugSerial.println(wifi_ssid);
-    DebugSerial.print("IP address: ");
-    DebugSerial.println(IP);
+    Serial.println("");
+    Serial.print("Connected to ");
+    Serial.println(wifi_ssid);
+    Serial.print("IP address: ");
+    Serial.println(IP);
   }
    
   /*use mdns for host name resolution*/
   if (!MDNS.begin(host)) { //http://<host>.local
-    DebugSerial.println("Error setting up MDNS responder!");
-    while (1) {
-      delay(1000);
-    }
+    Serial.println("Error setting up MDNS responder!");
   }
-  DebugSerial.println("mDNS responder started");
+  else {
+    Serial.println("mDNS responder started");
+  }
 
   SetupRecoveryWebPages();
   SetupWebPages();
@@ -214,7 +211,7 @@ void setup(void) {
 
   // Get started by requesting the UTC Clock
   if(String(mep_key) == "00000000000000000000") {
-    DebugSerial.println("No MEP key set, disabling MEP communication until next reboot...");
+    Serial.println("No MEP key set, disabling MEP communication until next reboot...");
   }
   else {
     queueRequest("300034" + MaxMEPReplyLengthAsHex(),mep_key,MEPQueue,&MEPQueueNextIndex,None); // BT52: UTC Clock
@@ -226,9 +223,9 @@ void setup(void) {
 }
 
 void SerialEvent2() {
-  while(MEPSerial.available() && InputBufferLength < MaxMEPReplyLength) {
-    InputBuffer[InputBufferLength] = (byte)MEPSerial.read();
-    //DebugSerial.printf("Received character code: %i\r\n",InputBuffer[InputBufferLength]);
+  while(Serial2.available() && InputBufferLength < MaxMEPReplyLength) {
+    InputBuffer[InputBufferLength] = (byte)Serial2.read();
+    //Serial.printf("Received character code: %i\r\n",InputBuffer[InputBufferLength]);
     InputBufferLength++;
     LastReceiveMillis = millis();
   }
@@ -238,8 +235,8 @@ void loop(void) {
   byte j;
 
   if((!APMode) && (WiFi.status() != WL_CONNECTED)) {
-    DebugSerial.println("Disconnected from WIFI access point");
-    DebugSerial.println("Reconnecting...");
+    Serial.println("Disconnected from WIFI access point");
+    Serial.println("Reconnecting...");
     if(wifi_password == "") {
       WiFi.begin(wifi_ssid);
     }
@@ -247,7 +244,7 @@ void loop(void) {
       WiFi.begin(wifi_ssid,wifi_password);
     } 
     delay(30000);
-    DebugSerial.println("");
+    Serial.println("");
   }
 
   if(mqtt_enable) {
@@ -304,7 +301,7 @@ void loop(void) {
     if(millis() - LastSentMillis > 10000) {
       MEPEnable(false);
       RS3232Enable(false);
-      DebugSerial.printf("RS3232 reset 1/2. Dropping buffer with this contents:\r\n");
+      Serial.printf("RS3232 reset 1/2. Dropping buffer with this contents:\r\n");
       dumpByteArray(InputBuffer,InputBufferLength);       
       InputBufferLength = 0;
       SentAwaitingReply = false;
@@ -314,7 +311,7 @@ void loop(void) {
       MEPEnable(true);
       delay(1000);
       SerialEvent2();
-      DebugSerial.printf("RS3232 reset 2/2. Dropping buffer with this contents:\r\n");
+      Serial.printf("RS3232 reset 2/2. Dropping buffer with this contents:\r\n");
       dumpByteArray(InputBuffer,InputBufferLength);       
       InputBufferLength = 0;
     }
@@ -328,7 +325,7 @@ void loop(void) {
 
       if(InputBufferLength >= MaxMEPReplyLength) {
         queueResponseWithNoRequest(InputBuffer,InputBufferLength,MEPQueue,&MEPQueueNextIndex);
-        DebugSerial.printf("Error: Input buffer overflow. InputBufferLength: %i Dropping buffer with this contents:\r\n",InputBufferLength);
+        Serial.printf("Error: Input buffer overflow. InputBufferLength: %i Dropping buffer with this contents:\r\n",InputBufferLength);
         dumpByteArray(InputBuffer,InputBufferLength);       
         InputBufferLength = 0;
       }
@@ -338,7 +335,7 @@ void loop(void) {
         if(!SentAwaitingReply)
         {
           queueResponseWithNoRequest(InputBuffer,InputBufferLength,MEPQueue,&MEPQueueNextIndex);
-          DebugSerial.printf("Error: InputBufferLength: %i, got this reply from the meter, but did not expect one:\r\n",InputBufferLength);
+          Serial.printf("Error: InputBufferLength: %i, got this reply from the meter, but did not expect one:\r\n",InputBufferLength);
           dumpByteArray(InputBuffer,InputBufferLength);       
           InputBufferLength = 0;
         }
@@ -351,7 +348,7 @@ void loop(void) {
   
           HandleInvalidSequenceNumber(mep_key,MEPQueue,MEPQueueSendIndex,&MEPQueueNextIndex);
   
-          DebugSerial.printf("Saved request response at index %i\r\n",MEPQueueSendIndex);
+          Serial.printf("Saved request response at index %i\r\n",MEPQueueSendIndex);
 
           if(!GetConfigurationRequestsSent)
           {
@@ -386,7 +383,7 @@ void loop(void) {
     }
     else {
       if((!SentAwaitingReply) && (millis()-LastReceiveMillis > 100)) {
-        DebugSerial.printf("Error: InputBufferLength: %i, got this garbage from the meter, but did not expect a package:\r\n",InputBufferLength);
+        Serial.printf("Error: InputBufferLength: %i, got this garbage from the meter, but did not expect a package:\r\n",InputBufferLength);
         dumpByteArray(InputBuffer,InputBufferLength);       
         InputBufferLength = 0;
       }
@@ -404,15 +401,15 @@ void loop(void) {
     }
     if((MEPQueue[MEPQueueSendIndex].RequestLength > 0) && (MEPQueue[MEPQueueSendIndex].ReplyLength == 0)) {
       if(MEPQueue[MEPQueueSendIndex].SendAttempts >= MaxSendAttempts) {
-        DebugSerial.printf("Giving up on reqest at index %i - too may retries\r\n");
+        Serial.printf("Giving up on reqest at index %i - too may retries\r\n");
         IncreaseMEPQueueIndex(&MEPQueueSendIndex);
       }
       else
       {
         MEPQueue[MEPQueueSendIndex].SendAttempts++;
-        DebugSerial.printf("Transmitting request at index %i (attempt %i)\r\n",MEPQueueSendIndex,MEPQueue[MEPQueueSendIndex].SendAttempts);
+        Serial.printf("Transmitting request at index %i (attempt %i)\r\n",MEPQueueSendIndex,MEPQueue[MEPQueueSendIndex].SendAttempts);
         for(unsigned long i = 0; i < MEPQueue[MEPQueueSendIndex].RequestLength; i++) {
-          MEPSerial.write((byte)MEPQueue[MEPQueueSendIndex].Request[i]);
+          Serial2.write((byte)MEPQueue[MEPQueueSendIndex].Request[i]);
         }    
         LastSentMillis = millis();
         SentAwaitingReply = true;

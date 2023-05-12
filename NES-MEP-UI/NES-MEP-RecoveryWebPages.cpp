@@ -6,13 +6,12 @@
 #include "NES-MEP-RecoveryWebPages.h"
 
 extern WebServer MyWebServer;
-extern DebugSerialType DebugSerial;
 
 File RecoveryFile; // Need to be global so it can be used between calls to HandleFirmwareUpload()
 
 void FormatSPIFFS()
 {
-  DebugSerial.printf("Format SPIFF: %i\r\n",  SPIFFS.format());
+  Serial.printf("Format SPIFF: %i\r\n",  SPIFFS.format());
   MyWebServer.sendHeader("Location", "/recovery"); // Redirect the client to the success page
   MyWebServer.send(303);
 }
@@ -25,7 +24,7 @@ void RemoveAllWWWFiles()
   {
     if (String(DeleteFile.name()).startsWith("/www_"))
     {
-      DebugSerial.printf("  Removing: %s\r\n", DeleteFile.name());
+      Serial.printf("  Removing: %s\r\n", DeleteFile.name());
       SPIFFS.remove(DeleteFile.name());
     }
     DeleteFile = root.openNextFile();
@@ -51,26 +50,26 @@ void SplitAllWWWFiles()
         if (outfile)
         {
           outfile.close();
-          DebugSerial.printf("---EOF---\r\n");
+          Serial.printf("---EOF---\r\n");
         }
         outfile = SPIFFS.open(buffer, FILE_WRITE);
-        DebugSerial.printf("   Extracting file: %s\r\n", buffer.c_str());
-        DebugSerial.printf("---SOF---\r\n");
+        Serial.printf("   Extracting file: %s\r\n", buffer.c_str());
+        Serial.printf("---SOF---\r\n");
       }
       else
       {
         outfile.printf("%s\r\n", buffer.c_str());
-        DebugSerial.printf("%s\r\n", buffer.c_str());
+        Serial.printf("%s\r\n", buffer.c_str());
       }
     }
     if (outfile)
     {
       outfile.close();
-      DebugSerial.printf("---EOF---\r\n");
+      Serial.printf("---EOF---\r\n");
     }
     infile.close();
   }
-  DebugSerial.printf("   Done extracting files!\r\n");
+  Serial.printf("   Done extracting files!\r\n");
 }
 
 void HandleStaticRecovery()
@@ -129,7 +128,7 @@ void HandleStaticRecovery()
     <html>
   )rawliteral";
 
-  DebugSerial.printf("Recovery page opened. Awaiting file upload...\r\n");
+  Serial.printf("Recovery page opened. Awaiting file upload...\r\n");
   MyWebServer.sendHeader("Connection", "close");
   MyWebServer.send(200, "text/html", StaticRecoveryIndex);
 }
@@ -143,19 +142,19 @@ void HandleFirmwareUpload()
     if (filename.endsWith(String(".bin")))
     {
       filename = "/update.bin";
-      DebugSerial.printf("HandleFirmwareUpload start...\r\nFilename: %s\r\n", filename.c_str());
+      Serial.printf("HandleFirmwareUpload start...\r\nFilename: %s\r\n", filename.c_str());
       if (!Update.begin(UPDATE_SIZE_UNKNOWN)) //start with max available size
         Update.printError(Serial);
     }
     else if (filename.endsWith(String(".wwws")))
     {
       filename = "/update.wwws";
-      DebugSerial.printf("HandleFirmwareUpload start...\r\nFilename: %s\r\n", filename.c_str());
+      Serial.printf("HandleFirmwareUpload start...\r\nFilename: %s\r\n", filename.c_str());
       RecoveryFile = SPIFFS.open(filename, FILE_WRITE); // Open the file for writing in SPIFFS (create if it doesn't exist)
     }
     else
     {
-      DebugSerial.printf("HandleFirmwareUpload/Could not identify file from filename: %s!!!\r\n", filename.c_str());
+      Serial.printf("HandleFirmwareUpload/Could not identify file from filename: %s!!!\r\n", filename.c_str());
       MyWebServer.send(500, "text/plain", "500: Unknown file received!!!");
       return;
     }
@@ -173,7 +172,7 @@ void HandleFirmwareUpload()
       // Write the received bytes to the file
       if (RecoveryFile)
         if (RecoveryFile.write(upload.buf, upload.currentSize) != upload.currentSize)
-          DebugSerial.printf("Error while writing to: %s\r\n", filename.c_str());
+          Serial.printf("Error while writing to: %s\r\n", filename.c_str());
     }
   }
   else if (upload.status == UPLOAD_FILE_END)
@@ -182,7 +181,7 @@ void HandleFirmwareUpload()
     {
       if (Update.end(true)) //true to set the size to the current progress
       {
-        DebugSerial.printf("Update Success: %u\r\nRebooting...\r\n", upload.totalSize);
+        Serial.printf("Update Success: %u\r\nRebooting...\r\n", upload.totalSize);
         MyWebServer.sendHeader("Location", "/recovery"); // Redirect the client to the success page
         MyWebServer.send(303);
         delay(1000);
@@ -196,14 +195,14 @@ void HandleFirmwareUpload()
       if (RecoveryFile)
       {
         RecoveryFile.close(); // Close the file
-        DebugSerial.printf("HandleFirmwareUpload/File Size: %i\r\n", upload.totalSize);
-        DebugSerial.printf("File with wwws (.wwws-file) was received:\r\n1. Removing all www files from SPIFFS...\r\n");
+        Serial.printf("HandleFirmwareUpload/File Size: %i\r\n", upload.totalSize);
+        Serial.printf("File with wwws (.wwws-file) was received:\r\n1. Removing all www files from SPIFFS...\r\n");
         RemoveAllWWWFiles();
-        DebugSerial.printf("2. Extracting www files from the received file...\r\n");
+        Serial.printf("2. Extracting www files from the received file...\r\n");
         SplitAllWWWFiles();
-        DebugSerial.printf("3. Deleting update.wwws file...\r\n");
+        Serial.printf("3. Deleting update.wwws file...\r\n");
         SPIFFS.remove("/update.wwws");
-        DebugSerial.printf("4. Done...\r\n");
+        Serial.printf("4. Done...\r\n");
         MyWebServer.sendHeader("Location", "/"); // Redirect the client to the success page
         MyWebServer.send(303);
       }
@@ -211,7 +210,7 @@ void HandleFirmwareUpload()
   }
   else
   {
-    DebugSerial.printf("HandleFirmwareUpload/Upload failed!!!\r\n");
+    Serial.printf("HandleFirmwareUpload/Upload failed!!!\r\n");
     MyWebServer.send(500, "text/plain", "500: Upload failed!!!");
   }
 }

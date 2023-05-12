@@ -10,7 +10,6 @@ ConsumptionDataStruct ConsumptionData;
 MeterInfoStruct MeterInfo;
 
 extern MEPQueueStruct MEPQueue[];
-extern DebugSerialType DebugSerial;
 
 // ####################################################
 // ## Source: "078-0372-01BD_MEP_Client_DC OSGP.pdf" ##
@@ -158,7 +157,7 @@ boolean DigestIsValidOnResponsePackage(byte *RequestPackage, unsigned long Reque
     return(false);
   }
   // TO-DO: Validate response digest!!!
-  DebugSerial.println("TO-DO: Validate response digest!!!");
+  Serial.println("TO-DO: Validate response digest!!!");
   return(true);
 }
 
@@ -183,7 +182,7 @@ void queueRequest(String request,String key,MEPQueueStruct *MEPQueue,byte *MEPQu
   MEPQueue[*MEPQueueNextIndex].ReplyLength = 0;
   MEPQueue[*MEPQueueNextIndex].NextAction = NextAction;
   MEPQueue[*MEPQueueNextIndex].SendAttempts = 0;
-  DebugSerial.printf("Queued request at index %i\r\n",*MEPQueueNextIndex);
+  Serial.printf("Queued request at index %i\r\n",*MEPQueueNextIndex);
   IncreaseMEPQueueIndex(MEPQueueNextIndex);
 }
 
@@ -206,7 +205,7 @@ void queueProcedureRequest(word procedureNo,String parameters,String key,MEPQueu
             WordAsHexString(procedureNo,true) +
             ByteAsHexString(ProcedureSequenceNo) +
             parameters;
-  DebugSerial.printf("Handling Procedure Request at index %i\r\n",*MEPQueueNextIndex);
+  Serial.printf("Handling Procedure Request at index %i\r\n",*MEPQueueNextIndex);
   queueRequest(request,key,MEPQueue,MEPQueueNextIndex,NextAction);
   IncreaseProcedureSequenceNo(&ProcedureSequenceNo);
 }
@@ -219,7 +218,7 @@ void queueResponseWithNoRequest(byte *Response,unsigned long ResponseLength,MEPQ
   MEPQueue[*MEPQueueNextIndex].ReplyLength = ResponseLength; 
   MEPQueue[*MEPQueueNextIndex].NextAction = None;
   MEPQueue[*MEPQueueNextIndex].SendAttempts = 0;
-  DebugSerial.printf("Queued response at index %i\r\n",*MEPQueueNextIndex);
+  Serial.printf("Queued response at index %i\r\n",*MEPQueueNextIndex);
   IncreaseMEPQueueIndex(MEPQueueNextIndex);
 }
 
@@ -535,11 +534,11 @@ String ReplyData2String(MEPQueueStruct *MEPQueue,byte MEPQueueReplyIndex, boolea
       case 0x0017: long FwdActiveWhL1L2L3;
                    long RevActiveWhL1L2L3;
                    if(Decode0x0017(MEPQueue[MEPQueueReplyIndex].ReplyLength-5,MEPQueue[MEPQueueReplyIndex].Reply+5,&FwdActiveWhL1L2L3,&RevActiveWhL1L2L3)) {
-                     DebugSerial.printf("Decoded FwdActiveWhL1L2L3=%lu and RevActiveWhL1L2L3=%lu\r\n",FwdActiveWhL1L2L3,RevActiveWhL1L2L3);
+                     Serial.printf("Decoded FwdActiveWhL1L2L3=%lu and RevActiveWhL1L2L3=%lu\r\n",FwdActiveWhL1L2L3,RevActiveWhL1L2L3);
                      if(UpdateDataStructures) {
                        ConsumptionData.BT23_Fwd_Act_Wh = FwdActiveWhL1L2L3;
                        ConsumptionData.BT23_Rev_Act_Wh = RevActiveWhL1L2L3;
-                       DebugSerial.printf("Storing Fwd_Act_Wh=%lu and Rev_Act_Wh=%lu\r\n",ConsumptionData.BT23_Fwd_Act_Wh,ConsumptionData.BT23_Rev_Act_Wh);
+                       Serial.printf("Storing Fwd_Act_Wh=%lu and Rev_Act_Wh=%lu\r\n",ConsumptionData.BT23_Fwd_Act_Wh,ConsumptionData.BT23_Rev_Act_Wh);
                      }
                      return "Fwd Active Wh L1L2L3: " + String(FwdActiveWhL1L2L3) + "<br>" +
                             "Rev Active Wh L1L2L3: " + String(RevActiveWhL1L2L3);
@@ -917,7 +916,7 @@ void HandleAlertSequence(byte *Response, unsigned long *ResponseLength,String ke
 {
   while((*ResponseLength >= 2) && (Response[0] == 0x00) && (Response[1] == 0x00)) // 0x0000: Alert Sequence
   {
-    DebugSerial.printf("Alert sequence (0x0000) received...\r\n");
+    Serial.printf("Alert sequence (0x0000) received...\r\n");
     queueResponseWithNoRequest(Response,2,MEPQueue,MEPQueueNextIndex);
     if(!AlertSeqenceActive)
     {
@@ -965,7 +964,7 @@ void HandleNextAction(String key,MEPQueueStruct *MEPQueue,byte MEPQueueReplyInde
 
 void MEPEnable(boolean State)
 {
-  DebugSerial.printf("Setting ENABLE pin %i\r\n",State);
+  Serial.printf("Setting ENABLE pin %i\r\n",State);
   pinMode(METER_ENABLE_PIN, OUTPUT);
   if(State)
   {
@@ -980,7 +979,7 @@ void MEPEnable(boolean State)
 void RS3232Enable(boolean State)
 {
   #ifdef RS3232_ENABLE_PIN
-    DebugSerial.printf("Setting RS3232 pin %i\r\n",State);
+    Serial.printf("Setting RS3232 pin %i\r\n",State);
     pinMode(RS3232_ENABLE_PIN, OUTPUT);
     if(State)
     {

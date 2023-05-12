@@ -34,7 +34,6 @@ extern char mqtt_connection_state_text[];
 extern byte MEPQueueNextIndex;
 extern ConsumptionDataStruct ConsumptionData;
 extern MeterInfoStruct MeterInfo;
-extern DebugSerialType DebugSerial;
 
 String GetESP32DateTime(boolean JsonFormat)
 {
@@ -51,7 +50,7 @@ void HandleFileInclude(String *pageBuffer, String tag, String filename)
   if (pageBuffer->indexOf(tag) > 0) {
     IncludeFile = SPIFFS.open(filename, FILE_READ);
     if (IncludeFile) {
-      DebugSerial.printf("Replacing tag %s with contents of file %s\r\n", tag.c_str(), filename.c_str());
+      Serial.printf("Replacing tag %s with contents of file %s\r\n", tag.c_str(), filename.c_str());
       pageBuffer->replace(tag, IncludeFile.readString());
       IncludeFile.close();
     }
@@ -146,7 +145,7 @@ void HandleGetDashDataWS()
           ConsumptionData.BT28_Fwd_Avg_W_L1,ConsumptionData.BT28_Fwd_Avg_W_L2,ConsumptionData.BT28_Fwd_Avg_W_L3,
           ConsumptionData.BT28_Rev_Avg_W_L1,ConsumptionData.BT28_Rev_Avg_W_L2,ConsumptionData.BT28_Rev_Avg_W_L3),
   MyWebServer.send(200, "application/json", pageBuffer);
-  DebugSerial.printf("Serving web request: GetDashDataWS with Fwd_Act_Wh=%lu and Rev_Act_Wh=%lu\r\n",ConsumptionData.BT23_Fwd_Act_Wh,ConsumptionData.BT23_Rev_Act_Wh);
+  Serial.printf("Serving web request: GetDashDataWS with Fwd_Act_Wh=%lu and Rev_Act_Wh=%lu\r\n",ConsumptionData.BT23_Fwd_Act_Wh,ConsumptionData.BT23_Rev_Act_Wh);
 }
 
 boolean CheckLogin()
@@ -169,7 +168,7 @@ void HandleWebRequest(String URL, String Filename, String ContentType, boolean V
   if (!SPIFFS.exists(Filename))
   {
     MyWebServer.send(404);
-    DebugSerial.printf("File %s was not found. Returning 404 as response to %s\r\n", Filename.c_str(), URL.c_str());
+    Serial.printf("File %s was not found. Returning 404 as response to %s\r\n", Filename.c_str(), URL.c_str());
     return;
   }
 
@@ -197,12 +196,12 @@ void HandleWebRequest(String URL, String Filename, String ContentType, boolean V
     pageBuffer.replace("###mqtt_password###", mqtt_password);
     pageBuffer.replace("###MaxMEPReplyLengthAsHex###", MaxMEPReplyLengthAsHex());
     MyWebServer.send(200, ContentType, pageBuffer);
-    DebugSerial.printf("File %s sent as response to %s\r\n", Filename.c_str(), URL.c_str());
+    Serial.printf("File %s sent as response to %s\r\n", Filename.c_str(), URL.c_str());
   }
   else
   {
     MyWebServer.send(404);
-    DebugSerial.printf("File %s could not be opened. Returning 404 as response to %s\r\n", Filename.c_str(), URL.c_str());
+    Serial.printf("File %s could not be opened. Returning 404 as response to %s\r\n", Filename.c_str(), URL.c_str());
   }
 }
 
@@ -212,13 +211,13 @@ void SendMEPRequest(String PredefinedMEPPackage, String RawMEPPackage)
   {
     if (RawMEPPackage != "")
     {
-      DebugSerial.printf("Send raw MEP request: %s\r\n",RawMEPPackage.c_str());
+      Serial.printf("Send raw MEP request: %s\r\n",RawMEPPackage.c_str());
       queueRequest(RawMEPPackage,mep_key,MEPQueue,&MEPQueueNextIndex,None);
     }
   }
   else
   {
-    DebugSerial.printf("Send predefined MEP request: %s\r\n",PredefinedMEPPackage.c_str());
+    Serial.printf("Send predefined MEP request: %s\r\n",PredefinedMEPPackage.c_str());
     queueRequest(PredefinedMEPPackage,mep_key,MEPQueue,&MEPQueueNextIndex,None);
   }
 }
@@ -232,16 +231,16 @@ boolean HandleLogin(String Login, String Password)
   {
     SecretLoginSession = random(LONG_MAX);
     UserLoginSession = SecretLoginSession;
-    DebugSerial.printf("Login successfull:\r\n");
+    Serial.printf("Login successfull:\r\n");
     LoggedIn = true;
   }
   else
   {
-    DebugSerial.printf("Login FAILED with this info.:\r\n");
+    Serial.printf("Login FAILED with this info.:\r\n");
     LoggedIn = false;
   }
-  DebugSerial.printf("Login: '%s'\r\n",Login.c_str());
-  DebugSerial.printf("Password: '%s'\r\n",Password.c_str());
+  Serial.printf("Login: '%s'\r\n",Login.c_str());
+  Serial.printf("Password: '%s'\r\n",Password.c_str());
   return LoggedIn;
 }
 // MQTT TEST IMPLEMENTATION
@@ -250,27 +249,27 @@ void StoreNewConfig(String ssid, String pwd, String userlogin, String userpwd, S
 // MQTT TEST IMPLEMENTATION END
 {
   
-  DebugSerial.printf("Storing new config in preferences:\r\n");
-  DebugSerial.printf("SSID: %s\r\n",ssid.c_str());
-  DebugSerial.printf("Password: %s\r\n",pwd.c_str());
+  Serial.printf("Storing new config in preferences:\r\n");
+  Serial.printf("SSID: %s\r\n",ssid.c_str());
+  Serial.printf("Password: %s\r\n",pwd.c_str());
   preferences.putString("wifi_ssid",ssid);
   preferences.putString("wifi_password",pwd);
   
-  DebugSerial.printf("User login: %s\r\n",userlogin.c_str());
-  DebugSerial.printf("User Password: %s\r\n",userpwd.c_str());
+  Serial.printf("User login: %s\r\n",userlogin.c_str());
+  Serial.printf("User Password: %s\r\n",userpwd.c_str());
   preferences.putString("user_login",userlogin);
   preferences.putString("user_password",userpwd);
-  DebugSerial.printf("Mqtt_enable %d\r\n",mqttenable);
-  DebugSerial.printf("Mqtt server: %s\r\n",mqtttopic.c_str());
-  DebugSerial.printf("Mqtt server: %s\r\n",mqttserver.c_str());
-  DebugSerial.printf("Mqtt user: %s\r\n",mqttuser.c_str());
-  DebugSerial.printf("Mqtt password: %s\r\n",mqttpassword.c_str());
+  Serial.printf("Mqtt_enable %d\r\n",mqttenable);
+  Serial.printf("Mqtt server: %s\r\n",mqtttopic.c_str());
+  Serial.printf("Mqtt server: %s\r\n",mqttserver.c_str());
+  Serial.printf("Mqtt user: %s\r\n",mqttuser.c_str());
+  Serial.printf("Mqtt password: %s\r\n",mqttpassword.c_str());
   preferences.putBool("mqtt_enable",mqttenable);
   preferences.putString("mqtt_topic",mqtttopic);
   preferences.putString("mqtt_server",mqttserver);
   preferences.putString("mqtt_user",mqttuser);
   preferences.putString("mqtt_password",mqttpassword);
-  DebugSerial.printf("MEP Key: %s\r\n",mepkey.c_str());
+  Serial.printf("MEP Key: %s\r\n",mepkey.c_str());
   preferences.putString("mep_key",mepkey);
 }
 
