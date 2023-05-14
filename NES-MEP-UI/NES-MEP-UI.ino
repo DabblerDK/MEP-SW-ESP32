@@ -87,9 +87,6 @@ void InitializePreferences(void) {
 /* setup function */
 void setup(void) {
   Serial.begin(115200);
-  while(!Serial) {
-    delay(100);
-  }
   
   #ifdef ARDUINO_ESP32_DEV
     Serial2.begin(9600);  

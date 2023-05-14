@@ -11,8 +11,11 @@ Note:
 - We have added this URL as "Additional Board Manager URLs" (the File/Properties menu): https://espressif.github.io/arduino-esp32/package_esp32_index.json
 - Two different hardware versions are supported by this software (the source auto configures based on the choosen board):
   - the original https://www.dabbler.dk MEP module (Rev1.10, Rev2.00 and later), using the "ESP32 Dev Module" board (ESP32-WROOM-32 based boards)
+    Note: For the "www.dabbler.dk version", we recommend these settings when flashing the firmware from the Arduino IDE: "Board"=ESP32 Dev Module, "Erase All Flasb Before Sketch Upload"=Enabled and "Flash Mode"=QIO
   - the http://www.ustepper.dk/ MEP module (Rev1.0 and later), using the "ESPC3 Dev Module" board (ESP32-C3-MINI-1 based boards)
-    Note: This version of the software has a dependency on EspSoftware Serial by Dirk Kaar, Peter Lerup (we have been testing with version 8.0.1 and 8.0.3 of the library, but will expect it to work with any future versions as well)
+    Note: The "uStepper version" of the software has a dependency on EspSoftware Serial by Dirk Kaar, Peter Lerup (we have been testing with version 8.0.1 and 8.0.3 of the library, but will expect it to work with any future versions as well).
+    Also note for the "uStepper version", we recommend these settings when flashing the firmware from the Arduino IDE: "Board"=ESP32C3 Dev Module, "Erase All Flasb Before Sketch Upload"=Enabled and "Flash Mode"=DIO
+	If you want to debug using the USB-C port, we recommend "USB CDC On Boot"=Enabled. If you debug using the pin header, set it to Disabled.
   - Other similar hardware and earlier versions of the mentioned modules can be supported by modifying the source code.
 - During development we are using the "ESP32 Dev Module" and "ESP32C3 Dev Module" boards depending on the hardware
 - The software has a dependency on PubSubClient by Nick O'Leary <nick.oleary@gmail.com> for MQTT (we have been testing with version 2.8.0 of the library, but will expect it to work with any future versions as well)
