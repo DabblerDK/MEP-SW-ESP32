@@ -23,7 +23,7 @@
 #define MaxMEPRequestLength 512
 #define MaxMEPReplyLength   512
 #define MaxMEPBuffer        20
-#define MaxSendAttempts     20
+#define MaxSendAttempts     50
 
 enum NextActionEnum
 {

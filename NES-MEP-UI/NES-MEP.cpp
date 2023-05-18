@@ -868,7 +868,7 @@ String ReplyPackageToMessage(MEPQueueStruct *MEPQueue,byte MEPQueueReplyIndex)
                  break;
       case 0x0B: Message = Message + "'color:red'>0x0B Authentication failure";
                  break;
-      case 0x0C: Message = Message + "'color:goldenrod'>0x0C Invalid sequence number (this is normal for 1st request)";
+      case 0x0C: Message = Message + "'color:goldenrod'>0x0C Invalid sequence number (this is normal for 1st and some later requests - caused by Meter comunicating with the uplink)";
                  break;
       default:   Message = Message + "'color:red'>0x"+ByteAsHexString(MEPQueue[MEPQueueReplyIndex].Reply[2])+" Unknown Response Code (internal error)";
                  break;

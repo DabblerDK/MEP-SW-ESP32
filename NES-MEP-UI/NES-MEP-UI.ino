@@ -399,7 +399,8 @@ void loop(void) {
     if((MEPQueue[MEPQueueSendIndex].RequestLength > 0) && (MEPQueue[MEPQueueSendIndex].ReplyLength == 0)) {
       if(MEPQueue[MEPQueueSendIndex].SendAttempts >= MaxSendAttempts) {
         Serial.printf("Giving up on reqest at index %i - too may retries\r\n");
-        IncreaseMEPQueueIndex(&MEPQueueSendIndex);
+        delay(1000);
+        ESP.restart(); // Don't know what else to attempt?
       }
       else
       {
