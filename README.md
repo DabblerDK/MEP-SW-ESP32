@@ -2,7 +2,7 @@
 Multipurpose Expansion Port (MEP) ESP32 Software for OSGP Smart Meters
 
 ---
-# This hardware will not be updated any further as I no longer have access to a NES Smart Meter. Read more here: https://www.dabbler.dk/index.php/2023/10/31/echelon-nes-smart-meters-probably-our-final-post-on-this-topic/
+# This software will not be updated any further as I no longer have access to a NES Smart Meter. Read more here: https://www.dabbler.dk/index.php/2023/10/31/echelon-nes-smart-meters-probably-our-final-post-on-this-topic/
 ---
 
 This is the repository holding the Software for OSGP Smart Meters (i.e. Echelon or NES). Please:
