@@ -78,3 +78,51 @@ If you just received a module with the latest software pre-installed, or you cha
 4. Go to the Configure menu. If you are prompted for a login/password, just leave the fields empty as you have not setup any values yet and hit the login button. On the config page you should fill these fields: WiFi SSID and Password, the User login and Password you want on the module and the MBK key you got from your power company. Save and restart the module
 
 Congratulations. Your module is now up and running and should connect to your WiFi.
+
+---
+# Contributions
+
+2024-01-04: DIYtechie contributed with this example configuration for Home Assistant via MQTT:
+
+mqtt:
+sensor:
+
+name: "Echelon power draw total (live)"
+availability_topic: "dabbler/lwt"
+payload_available: "Online"
+payload_not_available: "Offline"
+state_topic: "dabbler/meterConsumptionFwd/mydatajson"
+value_template: '{{ value_json.Fwd_W }}'
+unit_of_measurement: "W"
+
+name: "Echelon L1 power draw"
+availability_topic: "dabbler/lwt"
+payload_available: "Online"
+payload_not_available: "Offline"
+state_topic: "dabbler/meterConsumptionFwd/mydatajson"
+value_template: '{{ value_json.L1_Fwd_W }}'
+unit_of_measurement: "W"
+
+name: "Echelon L2 power draw"
+availability_topic: "dabbler/lwt"
+payload_available: "Online"
+payload_not_available: "Offline"
+state_topic: "dabbler/meterConsumptionFwd/mydatajson"
+value_template: '{{ value_json.L2_Fwd_W }}'
+unit_of_measurement: "W"
+
+name: "Echelon L3 power draw"
+availability_topic: "dabbler/lwt"
+payload_available: "Online"
+payload_not_available: "Offline"
+state_topic: "dabbler/meterConsumptionFwd/mydatajson"
+value_template: '{{ value_json.L3_Fwd_W }}'
+unit_of_measurement: "W"
+
+name: "Echelon total energy consumption"
+availability_topic: "dabbler/lwt"
+payload_available: "Online"
+payload_not_available: "Offline"
+state_topic: "dabbler/meterConsumptionTotal/mydatajson"
+value_template: '{{ value_json.Fwd_Act_Wh }}'
+unit_of_measurement: "Wh"`
