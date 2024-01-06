@@ -84,7 +84,7 @@ Congratulations. Your module is now up and running and should connect to your Wi
 
 2024-01-04: DIYtechie contributed with this example configuration for Home Assistant via MQTT:
 
-mqtt:
+`mqtt:
 sensor:
 
 name: "Echelon power draw total (live)"
