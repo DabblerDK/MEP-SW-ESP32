@@ -419,7 +419,12 @@ void loop(void) {
         if(FirstRequestOk)
         {
           // Update consumption data
-          queueRequest("300017" + MaxMEPReplyLengthAsHex(),mep_key,MEPQueue,&MEPQueueNextIndex,None);
+          
+          // 2024-03-28 Bugfix: Apparently this full read does not work on all meters, but the partial read is confirmed to work on both Gen.3 and 4 meters
+          // Thanks to Reto / info@makerspace-reinach.ch for this contribution!
+          //queueRequest("300017" + MaxMEPReplyLengthAsHex(),mep_key,MEPQueue,&MEPQueueNextIndex,None);
+          queueRequest("3F0017000000000D", mep_key, MEPQueue, &MEPQueueNextIndex, None);
+
           queueRequest("30001C" + MaxMEPReplyLengthAsHex(),mep_key,MEPQueue,&MEPQueueNextIndex,None);
         }
       }
